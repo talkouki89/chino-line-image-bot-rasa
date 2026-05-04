@@ -16,64 +16,93 @@ RANDOM_IMAGE_COMMANDS = {
     "__draw_random_no_ai": (0, True),
     "__draw_r18": (1, False),
     "__draw_r18_no_ai": (1, True),
-    "色圖": (0, False),
+    "隨機圖": (0, False),
+    "隨機色圖": (0, False),
     "一般抽圖": (0, False),
+    "一般色圖": (0, False),
+    "test1": (0, False),
+    "隨機無ai": (0, True),
+    "無ai隨機圖": (0, True),
+    "隨機圖無ai": (0, True),
     "抽圖無ai": (0, True),
     "抽圖無AI": (0, True),
     "無ai抽圖": (0, True),
     "無AI抽圖": (0, True),
+    "隨機r18": (1, False),
     "抽圖r18": (1, False),
     "r18色圖": (1, False),
     "R18色圖": (1, False),
+    "色圖": (1, False),
     "色圖r18": (1, False),
+    "test2": (1, False),
     "r18無ai": (1, True),
     "R18無AI": (1, True),
     "無ai r18": (1, True),
+    "r18色圖無ai": (1, True),
 }
-TAG_IMAGE_PREFIXES = ("tag色圖", "色圖tag", "標籤抽圖")
+TAG_IMAGE_PREFIXES = ("tag色圖", "色圖tag", "找色圖", "標籤抽圖", "test3")
 
 GAME_TAGS = [
     ("Nikke", "Nikke"),
     ("原神", "原神"),
-    ("崩壞", "崩壞"),
-    ("蔚藍檔案", "ブルーアーカイブ"),
-    ("賽馬娘", "ウマ娘"),
-    ("明日方舟", "アークナイツ"),
+    ("崩鐵", "崩鐵"),
+    ("明日方舟", "明日方舟"),
+    ("終末地", "終末地"),
+    ("異環", "異環"),
     ("FGO", "fgo"),
-    ("公主連結", "プリンセスコネクト"),
-    ("碧藍航線", "アズールレーン"),
-    ("艦隊收藏", "艦隊これくしょん"),
+    ("公主連結", "pcr"),
+    ("碧藍幻想", "gbf"),
+    ("碧藍航線", "艦B"),
+    ("艦隊collection", "艦C"),
+    ("少女前線", "少前"),
+    ("蔚藍檔案", "蔚藍檔案"),
+    ("絕區零", "絕區零"),
+    ("鳴潮", "鳴潮"),
     ("Shadowverse", "Shadowverse"),
 ]
 
 OTHER_TAGS = [
-    ("VTB", "vtb"),
-    ("女僕", "メイド"),
-    ("泳裝", "水着"),
+    ("JC", "JC"),
+    ("正太", "正太"),
+    ("蘿莉", "蘿莉"),
+    ("御姐", "御姐"),
+    ("白髮", "白髮"),
+    ("黑髮", "黑髮"),
+    ("白絲", "白絲"),
+    ("黑絲", "黑絲"),
     ("制服", "制服"),
-    ("貓耳", "猫耳"),
-    ("白髮", "白髪"),
-    ("黑髮", "黒髪"),
-    ("金髮", "金髪"),
-    ("長髮", "長髪"),
-    ("短髮", "短髪"),
+    ("女僕", "女僕"),
+    ("泳衣", "泳衣"),
+    ("白虎", "白虎"),
+    ("男娘", "男娘"),
+    ("扶他", "扶他"),
+    ("性轉", "性轉"),
+    ("VTB", "vtb"),
 ]
 
 CHARACTER_TAGS = [
-    ("初音未來", "初音ミク"),
-    ("雷電將軍", "雷電将軍"),
-    ("胡桃", "胡桃"),
-    ("甘雨", "甘雨"),
-    ("砂狼白子", "砂狼シロコ"),
-    ("小鳥遊星野", "小鳥遊ホシノ"),
-    ("愛麗絲", "アリス"),
-    ("阿米婭", "アーミヤ"),
+    ("真尋", "真尋"),
+    ("伊莉雅", "伊莉雅"),
+    ("酒吞童子", "酒吞童子"),
+    ("星野愛", "星野愛"),
+    ("水宮樞", "水宮樞"),
+    ("初音", "初音"),
+    ("草神", "草神"),
+    ("花火", "花火"),
+    ("星見雅", "星見雅"),
+    ("長離", "長離"),
+    ("大黑塔", "大黑塔"),
+    ("聖園彌香", "聖園彌香"),
+    ("優香", "優香"),
+    ("小春", "小春"),
+    ("白子", "白子"),
+    ("妃咲", "妃咲"),
 ]
 
 
 def handle(ctx):
     command = ctx.cmd.strip()
-    if command in {"抽圖", "抽圖模板", "抽圖說明", "抽圖功能"}:
+    if command in {"抽圖", "抽圖片", "抽色圖", "抽圖模板", "抽圖說明", "抽圖功能"}:
         ctx.send_template(ctx.to, build_draw_template())
         return True
     if command in RANDOM_IMAGE_COMMANDS:
@@ -175,18 +204,20 @@ def send_lolicon_result(ctx, data, label):
     image_url = urls.get("regular") or urls.get("original")
     text = (
         str(label) +
-        f"\n\n標題：{item.get('title')}"
-        f"\n作者：{item.get('author')}"
-        f"\nR18：{format_bool_flag(item.get('r18'))}"
-        f"\nAI：{format_ai_flag(item.get('aiType'))}"
-        f"\nPixiv：https://www.pixiv.net/artworks/{item.get('pid')}"
+        f"\n\n圖片標題⇛ {item.get('title')}"
+        f"\n圖片作者⇛ {item.get('author')}"
+        f"\n是否R18⇛ {format_bool_flag(item.get('r18'))}"
+        f"\n是否AI⇛ {format_ai_flag(item.get('aiType'))}"
+        f"\n圖源Url⇛ https://www.pixiv.net/artworks/{item.get('pid')}"
     )
-    ctx.cl.relatedMessage(ctx.to, text, ctx.msg_id)
     if not image_url:
-        ctx.reply("找不到圖片 URL。")
+        ctx.reply(text + "\n\n找不到圖片 URL。")
         return
     try:
-        ctx.cl.sendImageWithURL(ctx.to, image_url)
+        ctx.reply([
+            {"type": "text", "text": text[:5000]},
+            {"type": "image", "originalContentUrl": image_url, "previewImageUrl": image_url},
+        ])
     except Exception as exc:
         ctx.log_error(exc)
 
@@ -207,14 +238,14 @@ def format_bool_flag(value):
 def build_draw_template():
     return {
         "type": "flex",
-        "altText": "抽圖功能",
+        "altText": "抽圖片模板",
         "contents": {
             "type": "carousel",
             "contents": [
                 random_draw_bubble(),
-                tag_bubble("作品標籤", GAME_TAGS),
-                tag_bubble("常用標籤", OTHER_TAGS),
-                tag_bubble("角色標籤", CHARACTER_TAGS),
+                tag_bubble("遊戲 / 作品標籤", GAME_TAGS),
+                tag_bubble("其他標籤", OTHER_TAGS),
+                tag_bubble("人物標籤", CHARACTER_TAGS),
             ],
         },
     }
@@ -223,19 +254,20 @@ def build_draw_template():
 def random_draw_bubble():
     return bubble(
         [
-            title("抽圖"),
+            title("抽圖片"),
             note("按鈕會送出 postback，Bot 會直接執行，不會在聊天室送出指令文字。"),
             separator(),
-            note("一般：抽圖"),
-            note("一般無 AI：抽圖無AI"),
+            note("一般：隨機圖"),
+            note("一般無 AI：隨機無ai"),
             note("R18：r18色圖"),
-            note("R18 無 AI：R18無AI"),
+            note("R18 無 AI：r18無ai"),
             separator(),
             note("標籤抽圖：tag色圖 標籤"),
+            note("如果沒有輸入標籤，Bot 會提示輸入範例。"),
         ],
         [
-            button("抽圖", "__draw_random"),
-            button("抽圖無 AI", "__draw_random_no_ai"),
+            button("隨機圖", "__draw_random"),
+            button("隨機圖 無 AI", "__draw_random_no_ai"),
             button("R18 色圖", "__draw_r18"),
             button("R18 無 AI", "__draw_r18_no_ai"),
             button("Tag 色圖", "tag色圖"),
@@ -247,8 +279,8 @@ def random_draw_bubble():
 def tag_bubble(title_text, tags):
     contents = [
         title(title_text),
-        note("按下標籤後會用 tag色圖 進行搜尋。"),
-        note("如果查不到，可改用日文、英文或簡體標籤再試。"),
+        note("這邊為標籤 Tags 抽圖，所以可能會出 R18 的圖，請小心使用。"),
+        note("有時也會出現可能跟標籤有差別的圖。"),
         separator(),
     ]
     return bubble(contents, [tag_button(label, tag) for label, tag in tags])
