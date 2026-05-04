@@ -148,6 +148,12 @@ class LineOfficialInput(InputChannel):
         values = parse_qs(data, keep_blank_values=True)
         command = first(values, "cmd") or first(values, "command")
         if not command and first(values, "action") == "toggle_feature":
+            if not self._is_admin_event(event):
+                reply_token = event.get("replyToken")
+                if reply_token:
+                    self.client.reply_messages(reply_token, [{"type": "text", "text": "這個功能只有管理員可以使用。"}])
+                logger.info("LINE feature toggle postback rejected for non-admin")
+                return
             key = first(values, "key")
             if key:
                 command = f"功能切換 {key}"
@@ -163,6 +169,11 @@ class LineOfficialInput(InputChannel):
         }
         logger.info("LINE postback converted to command: %r", command)
         await self._handle_text_event(synthetic, on_new_message)
+
+    def _is_admin_event(self, event: dict[str, Any]) -> bool:
+        source = event.get("source") or {}
+        user_id = source.get("userId") or ""
+        return bool(user_id and (user_id == self.settings.creator or user_id in self.settings.admin_user_ids))
 
     def _handle_member_joined(self, event: dict[str, Any]) -> None:
         source = event.get("source") or {}
