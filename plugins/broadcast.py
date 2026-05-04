@@ -138,7 +138,7 @@ def run_broadcast(ctx, task):
                     job["failed"] = failed
             if index < len(task["targets"]):
                 time.sleep(SEND_INTERVAL_SECONDS)
-        ctx.cl.sendMessage(ctx.to, f"群發完成：成功 {len(task['targets']) - failed}，失敗 {failed}。")
+        ctx.reply(f"群發完成：成功 {len(task['targets']) - failed}，失敗 {failed}。")
     finally:
         cleanup_media(task.get("media"))
         with _lock:

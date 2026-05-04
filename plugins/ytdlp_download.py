@@ -56,7 +56,6 @@ def send_ytdlp_media_async(ctx, url, label="媒體", prefer_direct=False, use_do
 
 def download_and_send_media(ctx, url, label="媒體", prefer_direct=False, use_douyin_wtf=False):
     temp_dir = tempfile.mkdtemp(prefix=f"chino-{ctx.sender}-")
-    ctx.cl.sendReplyMessage(ctx.msg_id, ctx.to, f"開始下載{label}，完成後會自動傳送。")
     try:
         files = download_media(url, temp_dir, prefer_direct=prefer_direct, use_douyin_wtf=use_douyin_wtf)
         if not files:
@@ -394,49 +393,48 @@ def unique_existing_files(paths):
 
 
 def send_files(ctx, files):
-    image_paths = [path for path in files if detect_file_type(path) == "image"]
-    other_paths = [path for path in files if detect_file_type(path) != "image"]
+    messages = []
     failed = 0
-    if image_paths and not send_image_files(ctx, image_paths):
-        failed += len(image_paths)
-    for path in other_paths:
-        if not send_file(ctx, path):
+    for path in files:
+        message = media_message_from_file(ctx, path)
+        if not message:
             failed += 1
+            continue
+        if len(messages) >= 5:
+            failed += 1
+            continue
+        messages.append(message)
+    if messages:
+        ctx.reply(messages)
     return failed
 
 
 def send_image_files(ctx, paths):
+    return send_files(ctx, paths) == 0
+
+
+def media_message_from_file(ctx, path):
+    media_type = detect_file_type(path)
     try:
-        sender = getattr(ctx, "send_multiple_images", None)
-        if sender:
-            sender(ctx.to, paths)
-        elif len(paths) > 1 and hasattr(ctx.cl, "uploadMultipleImageToTalk"):
-            ctx.cl.uploadMultipleImageToTalk(ctx.to, paths)
-        else:
-            ctx.cl.sendImage(ctx.to, paths[0])
-        return True
+        url = ctx.cl.publish_local_file(path)
+        return media_message_from_url(url, media_type, os.path.basename(path))
     except Exception as exc:
         ctx.log_error(exc)
         if is_private_e2ee_send_error(ctx, exc):
-            ctx.reply("私訊可能因為 E2EE/Letter Sealing 無法傳送影片，請改到群組或重新建立私訊加密金鑰後再試。")
-    return False
+            ctx.reply("私訊可能因為 E2EE/Letter Sealing 無法傳送媒體，請改到群組或重新建立私訊加密金鑰後再試。")
+    return None
+
+
+def media_message_from_url(url, media_type, label="媒體"):
+    if media_type == "image":
+        return {"type": "image", "originalContentUrl": str(url), "previewImageUrl": str(url)}
+    if media_type == "video":
+        return {"type": "video", "originalContentUrl": str(url), "previewImageUrl": str(url)}
+    return {"type": "text", "text": f"不支援的檔案格式：{label}"}
 
 
 def send_file(ctx, path):
-    media_type = detect_file_type(path)
-    try:
-        if media_type == "image":
-            ctx.cl.sendImage(ctx.to, path)
-            return True
-        if media_type == "video":
-            ctx.cl.sendVideo(ctx.to, path)
-            return True
-        ctx.reply(f"不支援的檔案格式：{os.path.basename(path)}")
-    except Exception as exc:
-        ctx.log_error(exc)
-        if is_private_e2ee_send_error(ctx, exc):
-            ctx.reply("私訊可能因為 E2EE/Letter Sealing 無法傳送影片，請改到群組或重新建立私訊加密金鑰後再試。")
-    return False
+    return send_files(ctx, [path]) == 0
 
 
 def is_private_e2ee_send_error(ctx, exc):

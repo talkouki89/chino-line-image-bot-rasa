@@ -69,7 +69,6 @@ def send_instagram_async(ctx, url):
 
 def download_and_send_instagram(ctx, url):
     temp_dir = tempfile.mkdtemp(prefix=f"chino-ig-{ctx.sender}-")
-    ctx.cl.sendReplyMessage(ctx.msg_id, ctx.to, "開始下載 Instagram 媒體，完成後會自動傳送。")
     try:
         files, warning = download_instagram_media(url, temp_dir)
         if warning:

@@ -6,7 +6,13 @@ from urllib.parse import urlparse, urlunparse
 
 import requests
 
-from plugins.ytdlp_download import download_urls, safe_remove_tree, scan_output_files, send_image_files
+from plugins.ytdlp_download import (
+    download_urls,
+    media_message_from_file,
+    media_message_from_url,
+    safe_remove_tree,
+    scan_output_files,
+)
 
 
 FEATURE_KEY = "x_download"
@@ -110,27 +116,30 @@ def send_x_media(ctx, original_urls):
             ctx.reply("沒有找到可傳送的 X/Twitter 圖片或影片。")
             return
 
-        ctx.cl.sendReplyMessage(
-            ctx.msg_id,
-            ctx.to,
-            f"找到 {total} 個 X/Twitter 媒體，開始傳送。",
-        )
         failed = 0
+        messages = []
         if image_urls:
             download_urls(image_urls, temp_dir, referer=original_urls[0])
             image_files = [path for path in scan_output_files(temp_dir) if detect_file_type(path) == "image"]
             if image_files:
-                if not send_image_files(ctx, image_files):
-                    failed += len(image_files)
-                    if getattr(ctx.msg, "toType", None) == 0:
-                        ctx.reply("私訊可能因為 E2EE/Letter Sealing 無法傳送影片，請直接開啟：\n" + "\n".join(image_urls))
+                for path in image_files:
+                    message = media_message_from_file(ctx, path)
+                    if message and len(messages) < 5:
+                        messages.append(message)
+                    else:
+                        failed += 1
             else:
                 failed += len(image_urls)
 
         for media_url in video_urls:
-            if not send_media_url(ctx, media_url):
+            message = media_message_from_url(media_url, detect_file_type(media_url), media_url)
+            if message and len(messages) < 5:
+                messages.append(message)
+            else:
                 failed += 1
 
+        if messages:
+            ctx.reply(messages)
         if failed_sources:
             ctx.reply("有部分 X/Twitter 網址解析失敗：\n" + "\n".join(failed_sources[:5]))
         if failed:
@@ -168,13 +177,10 @@ def fetch_media_urls(original_url, timeout=20):
 def send_media_url(ctx, media_url):
     media_type = detect_file_type(media_url)
     try:
-        if media_type == "video":
-            ctx.cl.sendVideoWithURL(ctx.to, media_url)
+        message = media_message_from_url(media_url, media_type, media_url)
+        if message:
+            ctx.reply(message)
             return True
-        if media_type == "image":
-            ctx.cl.sendImageWithURL(ctx.to, media_url)
-            return True
-        ctx.reply(f"不支援的媒體格式：{media_url}")
     except Exception as exc:
         ctx.log_error(exc)
         if is_private_e2ee_send_error(ctx, exc):

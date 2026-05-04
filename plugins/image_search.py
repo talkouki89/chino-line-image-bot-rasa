@@ -74,7 +74,6 @@ def handle_reply_search(ctx):
     if not has_search_quota(ctx):
         return True
 
-    ctx.cl.sendReplyMessage(ctx.msg_id, ctx.to, f"開始執行 {engine_label} 圖搜，完成後會自動回覆。")
     threading.Thread(
         target=run_reply_search,
         args=(ctx, related_message_id, engine),
@@ -89,18 +88,16 @@ def run_reply_search(ctx, related_message_id, engine):
     try:
         download_reply_image(ctx, related_message_id, save_name)
         result_text, video_url = search_as_text(engine, save_name)
-        ctx.cl.relatedMessage(ctx.to, result_text, ctx.msg_id)
-        if video_url:
-            send_video_preview(ctx, video_url)
         deducted_quota = consume_search_quota(ctx)
+        if deducted_quota:
+            result_text += "\n\n剩餘使用次數:{day}".format(day=ctx.settings["days"])
+        send_search_reply(ctx, result_text, video_url)
     except Exception as exc:
         ctx.log_error(exc)
         message = user_facing_error(exc) or "搜尋失敗,請換個方式或重新搜尋"
-        ctx.cl.relatedMessage(ctx.to, message, ctx.msg_id)
+        ctx.reply(message)
     finally:
         safe_remove(save_name)
-
-    finish_search(ctx, deducted_quota)
 
 
 def handle_template_search(ctx):
@@ -116,7 +113,6 @@ def handle_template_search(ctx):
     if not is_engine_enabled(ctx, engine, engine):
         return True
 
-    ctx.cl.sendReplyMessage(ctx.msg_id, ctx.to, f"開始執行 {engine} 模板搜，完成後會自動回覆。")
     threading.Thread(
         target=run_template_search,
         args=(ctx, related_message_id, engine),
@@ -133,7 +129,7 @@ def run_template_search(ctx, related_message_id, engine):
     except Exception as exc:
         ctx.log_error(exc)
         message = user_facing_error(exc) or "搜尋失敗,請換個方式或重新搜尋"
-        ctx.cl.relatedMessage(ctx.to, message, ctx.msg_id)
+        ctx.reply(message)
     finally:
         safe_remove(save_name)
 
@@ -167,12 +163,14 @@ def consume_search_quota(ctx):
 
 
 def finish_search(ctx, deducted_quota):
-    if deducted_quota:
-        ctx.cl.relatedMessage(
-            ctx.to,
-            "剩餘使用次數:{day}".format(day=ctx.settings["days"]),
-            ctx.msg_id,
-        )
+    return None
+
+
+def send_search_reply(ctx, result_text, video_url=None):
+    messages = [{"type": "text", "text": str(result_text)[:5000]}]
+    if video_url:
+        messages.append({"type": "video", "originalContentUrl": str(video_url), "previewImageUrl": str(video_url)})
+    ctx.reply(messages)
 
 
 def is_engine_enabled(ctx, engine, label):
@@ -304,20 +302,26 @@ def send_template_result(ctx, engine, image_path):
             TraceMoeSync(**picsearch_kwargs(mute=False, size=None)).search(file=image_path),
             "TraceMoe",
         )
-        ctx.send_flex(
-            ctx.to,
-            "TraceMoe圖搜結果(模版)",
-            flex.Traceliff(
-                result.image,
-                result.video,
-                result.title_chinese,
-                result.title_native,
-                result.title_english,
-                result.isAdult,
-                result.episode,
-            ),
-        )
-        send_video_preview(ctx, result.video)
+        ctx.reply([
+            {
+                "type": "flex",
+                "altText": "TraceMoe圖搜結果(模版)",
+                "contents": flex.Traceliff(
+                    result.image,
+                    result.video,
+                    result.title_chinese,
+                    result.title_native,
+                    result.title_english,
+                    result.isAdult,
+                    result.episode,
+                ),
+            },
+            {
+                "type": "video",
+                "originalContentUrl": str(result.video),
+                "previewImageUrl": str(result.video),
+            },
+        ])
         return
 
     raise ValueError(f"Unknown template engine: {engine}")
@@ -434,10 +438,10 @@ def safe_remove(path):
 
 def send_video_preview(ctx, video_url):
     try:
-        ctx.cl.sendVideoWithURL(ctx.to, str(video_url))
+        ctx.reply({"type": "video", "originalContentUrl": str(video_url), "previewImageUrl": str(video_url)})
     except Exception as exc:
         ctx.log_error(exc)
-        ctx.cl.relatedMessage(ctx.to, "影片預覽上傳失敗，可以直接開啟上方影片預覽Url。", ctx.msg_id)
+        ctx.reply("影片預覽上傳失敗，可以直接開啟上方影片預覽Url。")
 
 
 def download_reply_image(ctx, related_message_id, save_name):

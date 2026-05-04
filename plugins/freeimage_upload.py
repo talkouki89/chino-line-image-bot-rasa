@@ -42,7 +42,7 @@ def handle(ctx):
             lines.append(f"頁面連結：{viewer_link}")
         if direct_link:
             lines.append(f"圖片URL：{direct_link}")
-        ctx.cl.relatedMessage(ctx.to, "\n".join(lines), ctx.msg_id)
+        ctx.reply("\n".join(lines))
     except Exception as exc:
         ctx.log_error(exc)
         if "私訊 E2EE" in str(exc) or str(exc).startswith("圖片下載失敗："):

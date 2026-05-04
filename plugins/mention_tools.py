@@ -45,7 +45,7 @@ def handle_who_mentioned_me(ctx):
         f"時間：{item.get('tagtime', '未知')}\n"
         f"剩餘標註紀錄：{len(chat_mentions)}"
     )
-    ctx.cl.relatedMessage(ctx.to, message, item.get("msgid") or ctx.msg_id)
+    ctx.reply(message)
     return True
 
 

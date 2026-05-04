@@ -104,7 +104,6 @@ def row(label, text):
 
 
 def run_speedtest(ctx):
-    ctx.cl.sendReplyMessage(ctx.msg_id, ctx.to, "開始測速，完成後會回傳結果圖片。")
     try:
         result = subprocess.run(
             [sys.executable, "-m", "speedtest", "--share", "--simple"],
@@ -116,8 +115,10 @@ def run_speedtest(ctx):
         output = (result.stdout or "") + "\n" + (result.stderr or "")
         image_url = find_speedtest_image(output)
         if image_url:
-            ctx.cl.sendImageWithURL(ctx.to, image_url)
-            ctx.cl.relatedMessage(ctx.to, cleanup_speedtest_text(output), ctx.msg_id)
+            ctx.reply([
+                {"type": "image", "originalContentUrl": image_url, "previewImageUrl": image_url},
+                {"type": "text", "text": cleanup_speedtest_text(output)[:5000]},
+            ])
             return
         ctx.reply("測速失敗，無法取得結果圖片。\n請確認已安裝 speedtest-cli。")
     except Exception as exc:
