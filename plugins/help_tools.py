@@ -11,6 +11,17 @@ SETTINGS_COMMANDS = {"功能設定", "功能開關"}
 def handle(ctx):
     command = ctx.cmd.strip()
     flags = load_feature_flags(str(FEATURE_PATH))
+    if command.lower() in {"mymid", "myid", "我是誰"}:
+        role = "創作者" if getattr(ctx, "is_creator", False) else "管理員" if getattr(ctx, "is_admin", False) else "一般用戶"
+        ctx.reply(
+            "目前 LINE Webhook 身分："
+            f"\nuserId：{ctx.sender or '未提供'}"
+            f"\nchatId：{ctx.to or '未提供'}"
+            f"\n角色：{role}"
+            "\n\n請把 userId 填到 .env 的 Creator 或 ADMIN_USER_IDS。"
+            "\n舊版 CHRLINE MID 不能直接當 LINE 官方 Messaging API 的 userId 使用。"
+        )
+        return True
     if command in HELP_COMMANDS:
         ctx.reply(build_help_flex(flags, is_admin=ctx.is_admin, is_creator=ctx.is_creator))
         return True

@@ -128,6 +128,9 @@ class LineOfficialInput(InputChannel):
         if message.get("type") != "text":
             logger.info("LINE non-text message stored but not sent to Rasa: message_type=%s", message.get("type"))
             return
+        if not should_forward_to_rasa(message.get("text", "")):
+            logger.info("LINE text ignored after plugins: chat_id=%s text=%r", chat_id, message.get("text", ""))
+            return
         logger.info("LINE message forwarded to Rasa: sender=%s text=%r", sender, message.get("text", ""))
         output = LineOfficialOutput(self.client, reply_token, chat_id=chat_id)
         await on_new_message(
@@ -211,3 +214,10 @@ class LineOfficialInput(InputChannel):
 def first(values: dict[str, list[str]], key: str) -> str:
     items = values.get(key) or []
     return items[0] if items else ""
+
+
+def should_forward_to_rasa(text: str) -> bool:
+    command = (text or "").strip()
+    if not command:
+        return False
+    return command.lower() in {"hi", "hello", "help"} or command in {"你好", "安安", "圖搜說明", "說明", "功能說明"}
