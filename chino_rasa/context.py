@@ -69,10 +69,18 @@ def build_context(
             client.push_messages(chat_id, messages)
 
     def send_template(to: str, payload: Any) -> None:
-        client.push_messages(to, [normalize_template(payload)])
+        messages = [normalize_template(payload)]
+        if reply_token:
+            client.reply_messages(reply_token, messages, chat_id=chat_id)
+        else:
+            client.push_messages(to, messages)
 
     def send_flex(to: str, alt_text: str, contents: dict[str, Any]) -> None:
-        client.sendFlex(to, alt_text, contents)
+        messages = [{"type": "flex", "altText": alt_text[:400], "contents": contents}]
+        if reply_token:
+            client.reply_messages(reply_token, messages, chat_id=chat_id)
+        else:
+            client.push_messages(to, messages)
 
     def backup() -> None:
         save_user_settings(sender, per_user_settings)
