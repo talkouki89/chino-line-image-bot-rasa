@@ -71,12 +71,13 @@ def build_help_text(flags=None, is_admin=False, is_creator=False):
         "抽圖：抽圖 / 色圖 / r18色圖 / tag色圖 標籤",
         "解析：n:編號 / n:popular / w:編號 / c:編號 / p:URL",
         "其他：#圖片上傳 / 誰標我 / 清空標註 / ren",
+        "群組歡迎：設定歡迎訊息 內容 / 查看歡迎訊息 / 清除歡迎訊息",
     ]
     if is_admin or is_creator:
         lines.extend([
             "",
             "管理員：功能狀態 / 功能設定 / 功能切換 <key>",
-            "群組：設定歡迎訊息 / 清除歡迎訊息 / 設定機器人名稱 / 設定機器人頭像",
+            "群組外觀：設定機器人名稱 / 設定機器人頭像 / 清除機器人外觀",
         ])
         if flags is not None:
             lines.append(f"功能狀態：{feature_status_text(flags)}")
@@ -211,6 +212,8 @@ def help_gallery_bubble():
         "c:編號：禁漫天堂",
         "p:作品ID 或 p:URL：Pixiv",
         "#圖片上傳：回覆圖片後上傳到 Freeimage.host",
+        "設定歡迎訊息 內容：一般用戶可設定目前群組歡迎訊息。",
+        "查看歡迎訊息 / 清除歡迎訊息：一般用戶可使用。",
     ])
 
 
@@ -220,8 +223,6 @@ def help_admin_bubble(flags):
         "功能狀態：查看所有功能開關。",
         "功能設定：打開 postback 開關模板。",
         "功能切換 <key>：文字切換指定功能。",
-        "設定歡迎訊息 內容：設定目前群組歡迎訊息。",
-        "清除歡迎訊息：清除目前群組歡迎訊息。",
         "設定機器人名稱 名稱：設定目前群組訊息顯示名稱。",
         "設定機器人頭像 https://...：設定目前群組訊息頭像。",
         f"目前功能：{feature_status_text(flags)}",

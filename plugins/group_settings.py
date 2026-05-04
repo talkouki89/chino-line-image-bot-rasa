@@ -8,7 +8,7 @@ from chino_rasa.store import group_settings, update_group_settings
 def handle(ctx):
     command = ctx.cmd.strip()
     if command.startswith("設定歡迎訊息 "):
-        if not require_group_admin(ctx):
+        if not require_group_chat(ctx):
             return True
         message = command.split(" ", 1)[1].strip()
         if not message:
@@ -18,13 +18,13 @@ def handle(ctx):
         ctx.reply("已設定目前群組的歡迎訊息。可使用 {UserName} 與 {GroupName}。")
         return True
     if command in {"查看歡迎訊息", "歡迎訊息"}:
-        if not require_group_admin(ctx):
+        if not require_group_chat(ctx):
             return True
         message = group_settings(ctx.to).get("welcome_message")
         ctx.reply(f"目前歡迎訊息：\n{message}" if message else "目前群組尚未設定歡迎訊息。")
         return True
     if command == "清除歡迎訊息":
-        if not require_group_admin(ctx):
+        if not require_group_chat(ctx):
             return True
         update_group_settings(ctx.to, welcome_message=None)
         ctx.reply("已清除目前群組的歡迎訊息。")
@@ -67,11 +67,17 @@ def handle(ctx):
 
 
 def require_group_admin(ctx):
-    if getattr(ctx, "to", "") == getattr(ctx, "sender", ""):
-        ctx.reply("此設定只能在群組或多人聊天室使用。")
+    if not require_group_chat(ctx):
         return False
     if not (getattr(ctx, "is_admin", False) or getattr(ctx, "is_creator", False)):
         ctx.reply("此功能只有管理員可以使用。")
+        return False
+    return True
+
+
+def require_group_chat(ctx):
+    if getattr(ctx, "to", "") == getattr(ctx, "sender", ""):
+        ctx.reply("此設定只能在群組或多人聊天室使用。")
         return False
     return True
 
