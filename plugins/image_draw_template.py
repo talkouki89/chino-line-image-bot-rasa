@@ -12,7 +12,10 @@ from plugins.core.text_convert import to_simplified, to_traditional
 LOLICON_API_URL = "https://api.lolicon.app/setu/v2"
 LOLICON_API_DOCS_URL = "https://docs.api.lolicon.app/"
 RANDOM_IMAGE_COMMANDS = {
-    "抽圖": (0, False),
+    "__draw_random": (0, False),
+    "__draw_random_no_ai": (0, True),
+    "__draw_r18": (1, False),
+    "__draw_r18_no_ai": (1, True),
     "色圖": (0, False),
     "一般抽圖": (0, False),
     "抽圖無ai": (0, True),
@@ -70,7 +73,7 @@ CHARACTER_TAGS = [
 
 def handle(ctx):
     command = ctx.cmd.strip()
-    if command in {"抽圖模板", "抽圖說明", "抽圖功能"}:
+    if command in {"抽圖", "抽圖模板", "抽圖說明", "抽圖功能"}:
         ctx.send_template(ctx.to, build_draw_template())
         return True
     if command in RANDOM_IMAGE_COMMANDS:
@@ -231,10 +234,10 @@ def random_draw_bubble():
             note("標籤抽圖：tag色圖 標籤"),
         ],
         [
-            button("抽圖", "抽圖"),
-            button("抽圖無 AI", "抽圖無AI"),
-            button("R18 色圖", "r18色圖"),
-            button("R18 無 AI", "R18無AI"),
+            button("抽圖", "__draw_random"),
+            button("抽圖無 AI", "__draw_random_no_ai"),
+            button("R18 色圖", "__draw_r18"),
+            button("R18 無 AI", "__draw_r18_no_ai"),
             button("Tag 色圖", "tag色圖"),
             url_button("Lolicon API", LOLICON_API_DOCS_URL),
         ],
