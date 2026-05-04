@@ -128,28 +128,114 @@ cp .env.example .env
 必要設定：
 
 ```env
+# [必填] LINE Developers > Messaging API > Channel access token。
+# 這是 Bot 回覆、推送訊息、下載使用者傳來圖片/影片時使用的 token。
 LINE_CHANNEL_ACCESS_TOKEN=
+
+# [必填] LINE Developers > Basic settings > Channel secret。
+# Webhook 會用它驗證 X-Line-Signature，確認請求真的來自 LINE。
 LINE_CHANNEL_SECRET=
+
+# [必填] 最高管理員的 LINE 官方 Messaging API userId。
+# 必須是 U 開頭的 userId，不是舊版 CHRLINE MID。
+# 不確定自己的值時，在 LINE 對 Bot 輸入：mymid
 Creator=
+
+# [建議] 額外管理員 userId，多個用英文逗號分隔。
+# 範例：ADMIN_USER_IDS=Uxxxx,Uyyyy
+# 管理員可以使用功能設定、群組歡迎訊息、群組 Bot 外觀等管理指令。
 ADMIN_USER_IDS=
+
+# [必填] 對外公開 HTTPS 網址，不要加結尾斜線。
+# LINE webhook、圖片/影片暫存公開網址都會用它。
+# 範例：PUBLIC_BASE_URL=https://chinobot.dpdns.org
 PUBLIC_BASE_URL=https://你的網域
+
+# [選填] Bot 使用的時區。
+# 預設是台灣時間；也可填 UTC+8。
 BOT_TIMEZONE=Asia/Taipei
+
+# [建議] 是否啟用 plugins/ 熱加載。
+# true：修改插件後，下次訊息會自動重新載入插件。
+# false：插件只在服務啟動時載入。
 HOT_RELOAD_PLUGINS=true
 ```
 
 常用選填：
 
 ```env
+# [選填] SauceNAO API key。
+# 使用 SauceNAO 圖搜時建議填寫，沒有 key 可能會受限。
 SauceNAO_api_key=
+
+# [選填] Freeimage.host API key。
+# 使用 #圖片上傳 時需要。
 FREEIMAGE_API_KEY=
+
+# [選填] PicImageSearch 代理。
+# 範例：PICSEARCH_PROXIES=http://127.0.0.1:7890
 PICSEARCH_PROXIES=
+
+# [選填] PicImageSearch timeout 秒數。
+# 網路慢或代理慢時可以調大。
 PICSEARCH_TIMEOUT=60
+
+# [選填] yt-dlp cookie 檔案路徑。
+# 下載 YouTube / X / Instagram 等需要登入或年齡驗證內容時可用。
 YTDLP_COOKIES_FILE=cookies.txt
+
+# [選填] 讓 yt-dlp 從本機瀏覽器讀 cookie。
+# 常見值：chrome、edge、firefox；也可用 chrome:Default。
+# 注意：在伺服器或無桌面環境通常不能用。
 YTDLP_COOKIES_FROM_BROWSER=
+
+# [選填] 直接填入 cookie 字串。
+# IG / TikTok 等下載 fallback 會用到；不要提交到 Git。
 YTDLP_COOKIE=
+
+# [選填] Instaloader session 使用者名稱。
+# 若 Instagram 下載需要登入，先在本機執行 instaloader -l 使用者名稱 建立 session。
 INSTALOADER_SESSION_USER=
+
+# [選填] nHentai cookie。
+# 遇到 403、Cloudflare 或需要登入時可填；不要提交到 Git。
 NHENTAI_COOKIE=
+
+# [選填] TikTok / Douyin 解析 API base URL。
+# 預設使用 https://douyin.wtf。
 DOUYIN_WTF_API_BASE=https://douyin.wtf
+```
+
+進階選填：
+
+```env
+# [選填] 兼容舊設定名稱；新專案優先使用 LINE_CHANNEL_ACCESS_TOKEN。
+LINE_ACCESS_TOKEN=
+
+# [選填] 舊版管理員欄位，仍會被讀取。
+# 建議新設定改用 ADMIN_USER_IDS。
+ADMIN_MIDS=
+
+# [選填] 是否啟用群組最低人數檢查。
+GROUP_MIN_MEMBER_CHECK=true
+
+# [選填] 群組最低人數門檻。
+GROUP_MIN_MEMBERS=10
+
+# [選填] yt-dlp 執行檔名稱或完整路徑。
+YTDLP_BIN=yt-dlp
+
+# [選填] 是否驗證 PicImageSearch HTTPS 憑證。
+PICSEARCH_VERIFY_SSL=true
+
+# [選填] Ascii2D base URL，可用逗號分隔多個備援。
+ASCII2D_BASE_URLS=https://ascii2d.net
+
+# [選填] Yandex base URL，可用逗號分隔多個備援。
+YANDEX_BASE_URLS=https://yandex.ru,https://ya.ru
+
+# [選填] Speedtest 測試下載 URL。
+SPEEDTEST_URL=https://speed.cloudflare.com/__down?bytes=10000000
 ```
 
 LINE Developers Webhook URL：
