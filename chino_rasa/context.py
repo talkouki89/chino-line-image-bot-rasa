@@ -64,7 +64,7 @@ def build_context(
     def reply(payload: Any) -> None:
         messages = normalize_reply_payload(payload)
         if reply_token:
-            client.reply_messages(reply_token, messages)
+            client.reply_messages(reply_token, messages, chat_id=chat_id)
         else:
             client.push_messages(chat_id, messages)
 

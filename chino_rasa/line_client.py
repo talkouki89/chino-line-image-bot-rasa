@@ -11,13 +11,16 @@ from typing import Any
 import requests
 
 from chino_rasa.settings import Settings
-from chino_rasa.store import all_groups, recent_messages
+from chino_rasa.store import all_groups, group_sender, recent_messages
 
 
 LINE_REPLY_URL = "https://api.line.me/v2/bot/message/reply"
 LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push"
 LINE_CONTENT_URL = "https://api-data.line.me/v2/bot/message/{message_id}/content"
 LINE_PROFILE_URL = "https://api.line.me/v2/bot/profile/{user_id}"
+LINE_GROUP_SUMMARY_URL = "https://api.line.me/v2/bot/group/{group_id}/summary"
+LINE_GROUP_MEMBER_PROFILE_URL = "https://api.line.me/v2/bot/group/{group_id}/member/{user_id}"
+LINE_ROOM_MEMBER_PROFILE_URL = "https://api.line.me/v2/bot/room/{room_id}/member/{user_id}"
 logger = logging.getLogger(__name__)
 
 
@@ -32,13 +35,13 @@ class LineOfficialClient:
             "Content-Type": "application/json",
         }
 
-    def reply_messages(self, reply_token: str, messages: list[dict[str, Any]]) -> None:
+    def reply_messages(self, reply_token: str, messages: list[dict[str, Any]], chat_id: str | None = None) -> None:
         if not reply_token:
             return
-        self._post(LINE_REPLY_URL, {"replyToken": reply_token, "messages": messages[:5]})
+        self._post(LINE_REPLY_URL, {"replyToken": reply_token, "messages": self._with_sender(messages[:5], chat_id)})
 
     def push_messages(self, to: str, messages: list[dict[str, Any]]) -> None:
-        self._post(LINE_PUSH_URL, {"to": to, "messages": messages[:5]})
+        self._post(LINE_PUSH_URL, {"to": to, "messages": self._with_sender(messages[:5], to)})
 
     def sendMessage(self, to: str, text: str) -> None:
         self.push_messages(to, [text_message(text)])
@@ -108,6 +111,34 @@ class LineOfficialClient:
     def getProfileCoverObjIdAndUrl(self, user_id: str) -> dict[str, str]:
         return {"url": ""}
 
+    def get_group_summary(self, group_id: str) -> SimpleNamespace:
+        response = requests.get(LINE_GROUP_SUMMARY_URL.format(group_id=group_id), headers=self.headers, timeout=20)
+        response.raise_for_status()
+        data = response.json()
+        return SimpleNamespace(
+            groupId=data.get("groupId", group_id),
+            groupName=data.get("groupName", group_id),
+            pictureUrl=data.get("pictureUrl", ""),
+        )
+
+    def get_group_member_profile(self, group_id: str, user_id: str) -> SimpleNamespace:
+        response = requests.get(
+            LINE_GROUP_MEMBER_PROFILE_URL.format(group_id=group_id, user_id=user_id),
+            headers=self.headers,
+            timeout=20,
+        )
+        response.raise_for_status()
+        return self._profile_from_response(response, user_id)
+
+    def get_room_member_profile(self, room_id: str, user_id: str) -> SimpleNamespace:
+        response = requests.get(
+            LINE_ROOM_MEMBER_PROFILE_URL.format(room_id=room_id, user_id=user_id),
+            headers=self.headers,
+            timeout=20,
+        )
+        response.raise_for_status()
+        return self._profile_from_response(response, user_id)
+
     def publish_local_file(self, source: str) -> str:
         if not self.settings.public_base_url:
             raise RuntimeError("PUBLIC_BASE_URL 未設定，無法把本機媒體轉成 LINE 可讀取的 HTTPS URL。")
@@ -126,6 +157,30 @@ class LineOfficialClient:
         except requests.HTTPError:
             logger.error("LINE API request failed: status=%s url=%s body=%s", response.status_code, url, response.text)
             raise
+
+    def _with_sender(self, messages: list[dict[str, Any]], chat_id: str | None) -> list[dict[str, Any]]:
+        sender = group_sender(chat_id or "")
+        if not sender:
+            return messages
+        patched = []
+        for message in messages:
+            if not isinstance(message, dict):
+                patched.append(message)
+                continue
+            item = dict(message)
+            item.setdefault("sender", sender)
+            patched.append(item)
+        return patched
+
+    def _profile_from_response(self, response, user_id: str) -> SimpleNamespace:
+        data = response.json()
+        return SimpleNamespace(
+            mid=user_id,
+            userId=user_id,
+            displayName=data.get("displayName", user_id),
+            pictureStatus=data.get("pictureUrl", ""),
+            pictureUrl=data.get("pictureUrl", ""),
+        )
 
 
 def text_message(text: str) -> dict[str, str]:

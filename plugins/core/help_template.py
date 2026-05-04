@@ -1,14 +1,13 @@
-from urllib.parse import quote
+from urllib.parse import urlencode
 
-from plugins.core.features import FEATURE_DEFINITIONS, is_enabled
+from plugins.core.features import FEATURE_DEFINITIONS, FEATURE_INDEX, is_enabled
 
 
-GITHUB_URL = "https://github.com/talkouki89/chino-line-image-bot"
-GITHUB_PULLS_URL = "https://github.com/talkouki89/chino-line-image-bot/pulls?q=is%3Apr+is%3Amerged"
-CREATOR_NAME = "智乃妹妹"
-LIFF_COMMAND_URL = "line://app/2009929108-vOiudUbo?type=text&text={text}&auto=yes"
+GITHUB_URL = "https://github.com/talkouki89/chino-line-image-bot-rasa"
+GITHUB_PULLS_URL = "https://github.com/talkouki89/chino-line-image-bot-rasa/pulls?q=is%3Apr+is%3Amerged"
 
 IMAGE_ENGINE_KEYS = [
+    "image_search",
     "engine_saucenao",
     "engine_ascii2d",
     "engine_tracemoe",
@@ -19,152 +18,87 @@ IMAGE_ENGINE_KEYS = [
 ]
 
 OTHER_FEATURE_KEYS = [
-    "help_templates",
     "x_download",
     "ytdlp_download",
     "facebook_download",
     "pornhub_download",
     "instagram_download",
     "tiktok_download",
-    "admin_profile_tools",
-    "runtime_tools",
-    "mention_tools",
-    "broadcast",
     "image_draw_template",
     "freeimage_upload",
     "nhentai",
     "wnacg",
     "jmcomic",
     "pixiv",
+    "runtime_tools",
+    "mention_tools",
+    "group_settings",
+    "search_quota",
+]
+
+ADMIN_FEATURE_KEYS = [
+    "help_templates",
+    "admin_profile_tools",
+    "broadcast",
     "auto_friend",
     "group_min_member_check",
-    "search_quota",
     "announcement_notify",
 ]
 
 
-def build_help_flex(flags, is_admin=False):
-    public_lines = [
-        "智乃搜圖機器人",
-        "",
-        "圖片搜尋",
-        "回覆搜1 SauceNAO",
-        "回覆搜2 Ascii2D",
-        "回覆搜3 TraceMoe",
-        "回覆搜4 Yandex",
-        "回覆搜5 Iqdb",
-        "回覆搜6 AnimeTrace",
-        "回覆搜7 GGJAV 女優辨識",
-        "",
-        "使用方式",
-        "回覆一張圖片後輸入上方指令",
-        "",
-        "作品解析",
-        "n:數字 / n:popular",
-        "w:數字 / c:數字 / p:數字",
-        "",
-        "其他功能",
-        "抽圖 / 隨機圖 / r18色圖 / tag色圖 標籤",
-        "誰標我 / 清空標註",
-        "#圖片上傳",
-    ]
-    download_lines = [
-        "媒體下載",
-        "",
-        "X / Twitter",
-        "x:URL 下載單一貼文圖片或影片",
-        "x:URL URL 可一次貼多個 X 網址",
-        "回覆搜x 回覆 X 網址後下載",
-        "",
-        "影片平台",
-        "yt:URL 下載 YouTube 或 yt-dlp 支援網址",
-        "回覆搜yt 回覆影片網址後下載",
-        "fb:URL / 回覆搜fb 下載 Facebook 影片",
-        "ph:URL / 回覆搜ph 下載 Pornhub 影片",
-        "",
-        "社群圖片 / 影片",
-        "ig:URL / 回覆搜ig 下載 Instagram 媒體",
-        "tk:URL 下載 TikTok 圖片或影片",
-        "",
-        "多張圖片會合併成一組傳送",
-    ]
-    admin_lines = [
-        "管理員功能",
-        "功能狀態",
-        "功能設定",
-        "功能切換 <key>",
-        "版本檢查 / 版本更新 / 圖搜api版本檢查",
-        "更新圖搜api",
-        "群發 / 確認群發 / 取消群發",
-        "pic:about / rg / 群組資訊 / data",
-        "mymid / gid / mid @人",
-        "mid:MID / Contact @人 / speedtest",
-        "ren / res / 登入狀態 / lg",
-        "查詢剩餘次數 / 查詢使用次數",
-        "加次數:數字 / 減次數:數字",
-        "圖搜退 / sp / speedtest / un 數量",
-        "ad@ @人 / pic:reb / reb @bot",
-        "",
-        "BotCreator 專用",
-        "清圖搜權限表 / 圖搜權限表",
-        "標註加圖搜權限 @人 / 標註刪除圖搜權限 @人",
-        "add:MID / del:MID / exec:",
-        "bottoken / botauthtoken",
-        f"功能狀態：{feature_status_text(flags)}",
-    ]
-    public_bubble = simple_bubble(public_lines)
-    public_bubble["footer"] = footer_buttons([uri_button("開啟 GitHub", GITHUB_URL)])
+def build_help_flex(flags, is_admin=False, is_creator=False):
+    role = "creator" if is_creator else "admin" if is_admin else "user"
     bubbles = [
-        public_bubble,
-        simple_bubble(download_lines),
+        help_public_bubble(),
+        help_search_bubble(),
+        help_download_bubble(),
+        help_gallery_bubble(),
     ]
-    if is_admin:
-        bubbles.append(simple_bubble(admin_lines))
-    return {
-        "type": "flex",
-        "altText": "ChinoBot 指令說明",
-        "contents": {
-            "type": "carousel",
-            "contents": bubbles,
-        },
-    }
+    if role in {"admin", "creator"}:
+        bubbles.append(help_admin_bubble(flags))
+    if role == "creator":
+        bubbles.append(help_creator_bubble(flags))
+    return flex("ChinoBot 圖搜說明", bubbles)
 
 
-def build_help_text(flags=None, is_admin=False):
+def build_help_text(flags=None, is_admin=False, is_creator=False):
     lines = [
-        "智乃搜圖機器人",
-        "使用方式：先回覆一張圖片，再輸入回覆搜指令。",
-        "",
-        "回覆搜1：SauceNAO，找圖片來源。",
-        "回覆搜2：Ascii2D，找二次元原圖。",
-        "回覆搜3：TraceMoe，找動畫截圖。",
-        "回覆搜4 / 5：Yandex / Iqdb，找相似圖。",
-        "回覆搜6：AnimeTrace，辨識角色或作品。",
-        "回覆搜7：GGJAV，辨識女優。",
-        "",
-        "其他：#圖片上傳、抽圖、tag色圖、誰標我、清空標註、n/w/c/p作品解析。",
-        "媒體下載：x:URL、回覆搜x、yt:URL、回覆搜yt、fb:URL、回覆搜fb、ph:URL、回覆搜ph、ig:URL、回覆搜ig、tk:URL。",
+        "圖搜說明",
+        "回覆圖片後輸入：回覆搜圖 / 回覆搜1 / 回覆搜2 / 回覆搜3",
+        "模板搜尋：模板搜 / 模板搜1 / 模板搜2 / 模板搜3",
+        "快捷：#1 / #2 / #3",
+        "下載：yt:URL / fb:URL / ig:URL / tk:URL / x:URL / ph:URL",
+        "抽圖：抽圖 / 色圖 / r18色圖 / tag色圖 標籤",
+        "解析：n:編號 / n:popular / w:編號 / c:編號 / p:URL",
+        "其他：#圖片上傳 / 誰標我 / 清空標註 / ren",
     ]
-    if is_admin:
+    if is_admin or is_creator:
         lines.extend([
             "",
-            "管理員：功能狀態、功能設定、版本檢查、版本更新、圖搜api版本檢查、更新圖搜api、群發。",
+            "管理員：功能狀態 / 功能設定 / 功能切換 <key>",
+            "群組：設定歡迎訊息 / 清除歡迎訊息 / 設定機器人名稱 / 設定機器人頭像",
         ])
         if flags is not None:
             lines.append(f"功能狀態：{feature_status_text(flags)}")
+    if is_creator:
+        lines.extend(["", "創作者：保留所有管理員功能，並可管理 Bot 全域設定與部署資料。"])
     return "\n".join(lines)
 
 
 def build_settings_flex(flags):
     messages = []
     for message in (
-        flex("ChinoBot 搜圖引擎開關", [
-            settings_intro_bubble("搜圖引擎開關"),
+        flex("ChinoBot 圖搜功能開關", [
+            settings_intro_bubble("圖搜功能開關"),
             *feature_bubbles(flags, IMAGE_ENGINE_KEYS),
         ]),
         flex("ChinoBot 其他功能開關", [
             settings_intro_bubble("其他功能開關"),
             *feature_bubbles(flags, OTHER_FEATURE_KEYS),
+        ]),
+        flex("ChinoBot 管理功能開關", [
+            settings_intro_bubble("管理功能開關"),
+            *feature_bubbles(flags, ADMIN_FEATURE_KEYS),
         ]),
     ):
         if isinstance(message, list):
@@ -191,54 +125,117 @@ def build_version_check_flex(local_version, remote_version=None, prs=None, error
     prs = prs or []
     has_update = bool(remote_version and remote_version != local_version)
     if error:
-        lines = [
-            "版本檢查",
-            f"目前版本：{local_version}",
-            f"狀態：{error}",
-        ]
+        lines = ["版本檢查", f"本機版本：{local_version}", f"狀態：{error}"]
     else:
         lines = [
             "版本檢查",
-            f"目前版本：{local_version}",
+            f"本機版本：{local_version}",
             f"遠端版本：{remote_version}",
-            "狀態：發現新版本。" if has_update else "狀態：目前已是最新版本。",
+            "狀態：有更新可套用" if has_update else "狀態：目前已是最新版本",
         ]
         if prs:
-            lines.extend(["", "最近更新內容"])
+            lines.extend(["", "最近合併的 PR"])
             for pr in prs[:5]:
                 line = f"#{pr['number']} {pr['title']}"
                 if pr.get("summary"):
                     line += f"\n{pr['summary']}"
                 lines.append(line)
         if version_notes:
-            lines.extend(["", "版本更新內容"])
+            lines.extend(["", "版本說明"])
             lines.extend(version_notes_lines(version_notes))
-
     buttons = [uri_button("查看新功能 PR", GITHUB_PULLS_URL)]
     if has_update:
-        buttons.append(command_button("版本更新", "版本更新"))
+        buttons.append(postback_button("版本更新", "版本更新"))
     return simple_flex("ChinoBot 版本檢查", lines, footer_buttons=buttons)
 
 
 def build_picsearch_api_version_check_flex(local_version, remote_version=None, error=None):
     has_update = bool(remote_version and remote_version != local_version)
     if error:
-        lines = [
-            "圖搜api版本檢查",
-            f"目前版本：{local_version}",
-            f"狀態：{error}",
-        ]
+        lines = ["圖搜 API 版本檢查", f"本機版本：{local_version}", f"狀態：{error}"]
     else:
         lines = [
-            "圖搜api版本檢查",
-            f"目前版本：{local_version}",
+            "圖搜 API 版本檢查",
+            f"本機版本：{local_version}",
             f"遠端版本：{remote_version}",
-            "狀態：發現新版 PicImageSearch。" if has_update else "狀態：目前已是最新版本。",
+            "狀態：有 PicImageSearch 更新" if has_update else "狀態：目前已是最新版本",
         ]
-    buttons = []
-    if has_update:
-        buttons.append(command_button("更新圖搜api", "更新圖搜api"))
-    return simple_flex("ChinoBot 圖搜api版本檢查", lines, footer_buttons=buttons or None)
+    buttons = [postback_button("更新圖搜 API", "更新圖搜api")] if has_update else None
+    return simple_flex("ChinoBot 圖搜 API 版本檢查", lines, footer_buttons=buttons)
+
+
+def help_public_bubble():
+    return simple_bubble([
+        "一般用戶功能",
+        "輸入圖搜說明可打開此模板。",
+        "回覆圖片後可使用圖搜、模板搜與快捷 #1/#2/#3。",
+        "可使用下載、作品解析、抽圖、圖片上傳、標註查詢與運行時間功能。",
+    ], footer_buttons=[uri_button("GitHub", GITHUB_URL)])
+
+
+def help_search_bubble():
+    return simple_bubble([
+        "圖片搜尋",
+        "回覆搜圖 / 回覆搜1：SauceNAO",
+        "回覆搜2：Ascii2D",
+        "回覆搜3：TraceMoe",
+        "回覆搜4：Yandex",
+        "回覆搜5：Iqdb",
+        "回覆搜6：AnimeTrace",
+        "回覆搜7：GGJAV",
+        "模板搜 / 模板搜1 / 模板搜2 / 模板搜3 可使用模板結果。",
+    ])
+
+
+def help_download_bubble():
+    return simple_bubble([
+        "下載功能",
+        "yt:URL：YouTube 或 yt-dlp 支援站台",
+        "fb:URL：Facebook 影片",
+        "ig:URL：Instagram 圖片 / 影片",
+        "tk:URL：TikTok 圖片 / 影片",
+        "x:URL：X / Twitter 圖片 / 影片",
+        "ph:URL：Pornhub 影片",
+        "也可回覆含網址的訊息後輸入：回覆搜yt / fb / ig / x / ph。",
+    ])
+
+
+def help_gallery_bubble():
+    return simple_bubble([
+        "抽圖與作品解析",
+        "抽圖 / 色圖：一般抽圖",
+        "r18色圖：R18 抽圖",
+        "tag色圖 標籤：指定標籤抽圖",
+        "n:編號 / n:popular：nHentai",
+        "w:編號：紳士漫畫",
+        "c:編號：禁漫天堂",
+        "p:作品ID 或 p:URL：Pixiv",
+        "#圖片上傳：回覆圖片後上傳到 Freeimage.host",
+    ])
+
+
+def help_admin_bubble(flags):
+    return simple_bubble([
+        "管理員功能",
+        "功能狀態：查看所有功能開關。",
+        "功能設定：打開 postback 開關模板。",
+        "功能切換 <key>：文字切換指定功能。",
+        "設定歡迎訊息 內容：設定目前群組歡迎訊息。",
+        "清除歡迎訊息：清除目前群組歡迎訊息。",
+        "設定機器人名稱 名稱：設定目前群組訊息顯示名稱。",
+        "設定機器人頭像 https://...：設定目前群組訊息頭像。",
+        f"目前功能：{feature_status_text(flags)}",
+    ])
+
+
+def help_creator_bubble(flags):
+    return simple_bubble([
+        "創作者功能",
+        "創作者擁有所有管理員功能。",
+        "可管理部署、版本檢查、版本更新、圖搜 API 更新與全域資料。",
+        "建議把 token、cookie、session 只放在 .env，不要提交到 Git。",
+        f"目前功能：{feature_status_text(flags)}",
+    ])
 
 
 def version_notes_lines(value, limit=10):
@@ -271,14 +268,13 @@ def feature_index():
 def settings_intro_bubble(title_text):
     return bubble([
         title(title_text),
-        text("只有管理員可以切換功能。"),
-        text("按下按鈕會透過 LIFF 發送切換指令，不會再次洗出設定模板。", "#666666"),
+        text("按下按鈕會送出 postback，Bot 會直接切換功能，不會在聊天室洗出指令文字。"),
+        text("只有管理員或創作者可以切換功能。", "#666666"),
     ])
 
 
 def feature_button_bubble(item, enabled):
     state = "開啟" if enabled else "關閉"
-    command = f"功能切換 {item['key']}"
     return {
         "type": "bubble",
         "styles": {"body": {"backgroundColor": "#fff7fb"}, "footer": {"backgroundColor": "#fff7fb"}},
@@ -289,27 +285,14 @@ def feature_button_bubble(item, enabled):
             text(item["description"], "#777777"),
         ]),
         "footer": footer_buttons([
-            {
-                "type": "button",
-                "style": "primary",
-                "height": "sm",
-                "action": {
-                    "type": "uri",
-                    "label": "切換",
-                    "uri": liff_command_url(command),
-                },
-            }
+            postback_button("切換", f"功能切換 {item['key']}", {"action": "toggle_feature", "key": item["key"]})
         ]),
     }
 
 
 def simple_flex(alt_text, lines, footer_buttons=None):
     body = simple_bubble(lines)
-    message = {
-        "type": "flex",
-        "altText": alt_text,
-        "contents": body,
-    }
+    message = {"type": "flex", "altText": alt_text, "contents": body}
     if footer_buttons:
         message["contents"]["footer"] = {
             "type": "box",
@@ -320,15 +303,23 @@ def simple_flex(alt_text, lines, footer_buttons=None):
     return message
 
 
-def simple_bubble(lines):
+def simple_bubble(lines, footer_buttons=None):
     contents = [title(lines[0])]
     for line in lines[1:]:
         contents.append(text(line or " ", "#555555"))
-    return {
+    bubble_data = {
         "type": "bubble",
         "styles": {"body": {"backgroundColor": "#fff7fb"}, "footer": {"backgroundColor": "#fff7fb"}},
         "body": box(contents[:45]),
     }
+    if footer_buttons:
+        bubble_data["footer"] = {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "contents": footer_buttons,
+        }
+    return bubble_data
 
 
 def feature_status_text(flags):
@@ -402,17 +393,28 @@ def uri_button(label, uri):
         "style": "link",
         "color": "#f08ab8",
         "height": "sm",
+        "action": {"type": "uri", "label": label, "uri": uri},
+    }
+
+
+def postback_button(label, display_text, data=None):
+    data = data or {"cmd": display_text}
+    return {
+        "type": "button",
+        "style": "primary",
+        "color": "#f08ab8",
+        "height": "sm",
         "action": {
-            "type": "uri",
+            "type": "postback",
             "label": label,
-            "uri": uri,
+            "data": encode_postback(data),
         },
     }
 
 
 def command_button(label, command):
-    return uri_button(label, liff_command_url(command))
+    return postback_button(label, command)
 
 
-def liff_command_url(command):
-    return LIFF_COMMAND_URL.format(text=quote(command, safe=""))
+def encode_postback(data):
+    return urlencode(data)

@@ -12,6 +12,7 @@ STATE_PATH = ROOT_DIR / "json" / "state.json"
 RECENT_PATH = ROOT_DIR / "json" / "recent_messages.json"
 FEATURE_PATH = ROOT_DIR / "json" / "features.json"
 GROUPS_PATH = ROOT_DIR / "json" / "group_ids.json"
+GROUP_SETTINGS_PATH = ROOT_DIR / "json" / "group_settings.json"
 
 
 def read_json(path: Path, default: Any) -> Any:
@@ -68,3 +69,44 @@ def recent_messages(chat_id: str, limit: int = 1000) -> list[SimpleNamespace]:
     data = read_json(RECENT_PATH, {})
     items = data.get(chat_id, [])[-limit:]
     return [SimpleNamespace(**item) for item in reversed(items)]
+
+
+def group_settings(chat_id: str) -> dict[str, Any]:
+    if not chat_id:
+        return {}
+    data = read_json(GROUP_SETTINGS_PATH, {})
+    settings = data.setdefault(chat_id, {})
+    write_json(GROUP_SETTINGS_PATH, data)
+    return settings
+
+
+def update_group_settings(chat_id: str, **values: Any) -> dict[str, Any]:
+    data = read_json(GROUP_SETTINGS_PATH, {})
+    settings = data.setdefault(chat_id, {})
+    for key, value in values.items():
+        if value is None:
+            settings.pop(key, None)
+        else:
+            settings[key] = value
+    if settings:
+        data[chat_id] = settings
+    else:
+        data.pop(chat_id, None)
+    write_json(GROUP_SETTINGS_PATH, data)
+    return settings
+
+
+def group_sender(chat_id: str) -> dict[str, str]:
+    settings = group_settings(chat_id)
+    sender = {}
+    name = str(settings.get("bot_name") or "").strip()
+    icon_url = str(settings.get("bot_icon_url") or "").strip()
+    if name:
+        sender["name"] = name[:20]
+    if icon_url:
+        sender["iconUrl"] = icon_url
+    return sender
+
+
+def welcome_message(chat_id: str) -> str:
+    return str(group_settings(chat_id).get("welcome_message") or "").strip()

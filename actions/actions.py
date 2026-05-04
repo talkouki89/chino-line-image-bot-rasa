@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Text
 from rasa_sdk import Action, Tracker
 from rasa_sdk.executor import CollectingDispatcher
 
-from chino_rasa.help_text import HELP_TEXT
+from plugins.core.help_template import build_help_text
 
 
 class ActionShowHelp(Action):
@@ -18,7 +18,7 @@ class ActionShowHelp(Action):
         tracker: Tracker,
         domain: Dict[Text, Any],
     ) -> List[Dict[Text, Any]]:
-        dispatcher.utter_message(text=HELP_TEXT)
+        dispatcher.utter_message(text=build_help_text())
         return []
 
 
