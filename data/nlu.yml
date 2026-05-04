@@ -1,0 +1,31 @@
+version: "3.1"
+
+nlu:
+  - intent: help
+    examples: |
+      - help
+      - 說明
+      - 圖搜說明
+      - 功能說明
+      - 指令
+      - 指令說明
+      - bot 說明
+
+  - intent: status
+    examples: |
+      - 狀態
+      - bot 狀態
+      - 功能狀態
+
+  - intent: runtime
+    examples: |
+      - ren
+      - 運行時間
+      - runtime
+
+  - intent: greet
+    examples: |
+      - hi
+      - hello
+      - 你好
+      - 安安

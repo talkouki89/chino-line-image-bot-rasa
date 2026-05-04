@@ -1,0 +1,12 @@
+[project]
+name = "chino-line-image-bot-rasa"
+version = "0.1.0"
+description = "Rasa-based LINE official API bot with chino-line-image-bot plugin compatibility."
+requires-python = ">=3.10,<3.11"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

@@ -1,0 +1,24 @@
+version: "3.1"
+
+intents:
+  - help
+  - status
+  - runtime
+  - greet
+  - nlu_fallback
+
+responses:
+  utter_greet:
+    - text: "你好，我是 Chino Bot。輸入「圖搜說明」可以查看完整功能。"
+  utter_status:
+    - text: "Bot 正在運行。插件會從 plugins/ 載入，功能開關會從 json/features.json 讀取。"
+  utter_default:
+    - text: "我看不懂這個指令。輸入「圖搜說明」可以查看完整功能。"
+
+actions:
+  - action_show_help
+  - action_default_fallback
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true
