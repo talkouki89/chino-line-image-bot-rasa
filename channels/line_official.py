@@ -185,11 +185,17 @@ class LineOfficialInput(InputChannel):
             logger.info("LINE memberJoined without welcome message: chat_id=%s", chat_id)
             return
         group_name = self._group_name(source)
+        reply_token = event.get("replyToken")
         for member in (event.get("joined") or {}).get("members", []):
             user_id = member.get("userId")
             user_name = self._member_name(source, user_id)
             text = template.replace("{UserName}", user_name).replace("{GroupName}", group_name)
-            self.client.push_messages(chat_id, [{"type": "text", "text": text[:5000]}])
+            message = {"type": "text", "text": text[:5000]}
+            if reply_token:
+                self.client.reply_messages(reply_token, [message], chat_id=chat_id)
+                reply_token = None
+            else:
+                self.client.push_messages(chat_id, [message])
 
     def _group_name(self, source: dict[str, Any]) -> str:
         group_id = source.get("groupId")
