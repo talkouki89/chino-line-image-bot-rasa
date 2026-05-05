@@ -193,7 +193,7 @@ PICSEARCH_TIMEOUT=60
 
 # [選填] yt-dlp cookie 檔案路徑。
 # 下載 YouTube / X / Instagram 等需要登入或年齡驗證內容時可用。
-# 如果這個檔案存在，會優先使用它；不存在才會改用下方瀏覽器 cookie 設定。
+# 如果這個檔案存在，會只使用它；不存在才會改用下方瀏覽器 cookie 設定。
 YTDLP_COOKIES_FILE=cookies.txt
 
 # [選填] 讓 yt-dlp 從本機瀏覽器讀 cookie。
@@ -459,7 +459,7 @@ RASA_SYSTEMD_SERVICE=chino-rasa.service
 
 ## 定期清理 logs 與 public/media
 
-下載功能會把媒體暫存到 `public/media/` 給 LINE 讀取；服務長期運作時建議定期清理。
+下載功能會把媒體暫存到 `public/media/` 給 LINE 讀取；插件錯誤會追加到專案根目錄的 `errorLog.txt`。服務長期運作時建議定期清理。
 
 手動清理：
 
@@ -472,6 +472,8 @@ Windows：
 ```powershell
 .\scripts\cleanup_runtime.ps1 --log-days 14 --public-hours 48
 ```
+
+這會清理 `logs/`、超過保留天數的 `errorLog.txt`，以及超過保留時間的 `public/media/`。
 
 Linux cron 每天 04:30 清理：
 

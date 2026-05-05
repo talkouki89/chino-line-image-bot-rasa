@@ -11,6 +11,7 @@ models/
 results/
 logs/
 *.log
+errorLog.txt
 
 json/features.json
 json/state.json

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import traceback
 from datetime import datetime
 from types import SimpleNamespace
 from typing import Any
@@ -13,6 +14,7 @@ from chino_rasa.store import FEATURE_PATH, remember_message, save_user_settings,
 
 
 START_TIME = datetime.now()
+ERROR_LOG = ROOT_DIR / "errorLog.txt"
 
 
 class PluginContext(SimpleNamespace):
@@ -84,6 +86,7 @@ def build_context(
 
     def log_error(error: Any) -> None:
         logging.exception("Plugin error: %s", error)
+        write_error_log(error)
 
     return PluginContext(
         event=event,
@@ -114,6 +117,20 @@ def normalize_reply_payload(payload: Any) -> list[dict[str, Any]]:
     if isinstance(payload, dict):
         return [normalize_template(payload)]
     return [text_message(str(payload))]
+
+
+def write_error_log(error: Any) -> None:
+    try:
+        ERROR_LOG.parent.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if isinstance(error, BaseException):
+            detail = "".join(traceback.format_exception(type(error), error, error.__traceback__)).strip()
+        else:
+            detail = str(error)
+        with ERROR_LOG.open("a", encoding="utf-8") as fp:
+            fp.write(f"\n[{timestamp}] {detail}\n")
+    except OSError:
+        logging.exception("Failed to write errorLog.txt")
 
 
 def remember_non_text_message(event: dict[str, Any]) -> None:

@@ -191,6 +191,8 @@ def load_cookie_options():
 
 
 def auto_browser_cookie_attempts(base_opts):
+    if base_opts.get("cookiefile"):
+        return []
     if base_opts.get("cookiesfrombrowser"):
         return []
     if not env_bool("YTDLP_AUTO_BROWSER_COOKIES", True):

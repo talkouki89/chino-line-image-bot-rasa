@@ -19,6 +19,7 @@ def main() -> int:
     now = time.time()
     deleted = 0
     deleted += cleanup(ROOT_DIR / "logs", now - args.log_days * 86400, args.dry_run)
+    deleted += cleanup_file(ROOT_DIR / "errorLog.txt", now - args.log_days * 86400, args.dry_run)
     deleted += cleanup(ROOT_DIR / "public" / "media", now - args.public_hours * 3600, args.dry_run)
     print(f"cleanup complete: {deleted} file(s) {'matched' if args.dry_run else 'deleted'}")
     return 0
@@ -42,6 +43,22 @@ def cleanup(root: Path, cutoff: float, dry_run: bool) -> int:
         except OSError as exc:
             print(f"skip {path}: {exc}")
     return count
+
+
+def cleanup_file(path: Path, cutoff: float, dry_run: bool) -> int:
+    if not path.exists() or not path.is_file():
+        return 0
+    try:
+        if path.stat().st_mtime > cutoff:
+            return 0
+        if dry_run:
+            print(path)
+        else:
+            path.unlink()
+        return 1
+    except OSError as exc:
+        print(f"skip {path}: {exc}")
+        return 0
 
 
 if __name__ == "__main__":
