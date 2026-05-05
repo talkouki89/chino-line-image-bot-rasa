@@ -193,12 +193,19 @@ PICSEARCH_TIMEOUT=60
 
 # [選填] yt-dlp cookie 檔案路徑。
 # 下載 YouTube / X / Instagram 等需要登入或年齡驗證內容時可用。
+# 如果這個檔案存在，會優先使用它；不存在才會改用下方瀏覽器 cookie 設定。
 YTDLP_COOKIES_FILE=cookies.txt
 
 # [選填] 讓 yt-dlp 從本機瀏覽器讀 cookie。
 # 常見值：chrome、edge、firefox；也可用 chrome:Default。
 # 注意：在伺服器或無桌面環境通常不能用。
 YTDLP_COOKIES_FROM_BROWSER=
+
+# [選填] YouTube 出現「Sign in to confirm」或 bot 驗證時，自動嘗試瀏覽器 cookie。
+YTDLP_AUTO_BROWSER_COOKIES=true
+
+# [選填] 自動嘗試的瀏覽器 cookie 來源；分號分隔多組，逗號分隔參數。
+YTDLP_AUTO_BROWSER_COOKIE_SOURCES=edge;chrome;firefox
 
 # [選填] 直接填入 cookie 字串。
 # IG / TikTok 等下載 fallback 會用到；不要提交到 Git。

@@ -130,11 +130,12 @@ def build_ytdlp_options(output_dir):
         "no_color": True,
         "windowsfilenames": True,
     }
-    ydl_opts.update(load_cookie_options())
     cookies_file = os.getenv("YTDLP_COOKIES_FILE", "cookies.txt")
     cookies_file = resolve_project_path(cookies_file)
     if cookies_file and os.path.exists(cookies_file):
         ydl_opts["cookiefile"] = cookies_file
+    else:
+        ydl_opts.update(load_cookie_options())
     return ydl_opts
 
 
@@ -194,7 +195,9 @@ def auto_browser_cookie_attempts(base_opts):
         return []
     if not env_bool("YTDLP_AUTO_BROWSER_COOKIES", True):
         return []
-    raw = os.getenv("YTDLP_AUTO_BROWSER_COOKIE_SOURCES", "edge;chrome;firefox")
+    raw = os.getenv("YTDLP_COOKIES_FROM_BROWSER", "").strip()
+    if not raw:
+        raw = os.getenv("YTDLP_AUTO_BROWSER_COOKIE_SOURCES", "edge;chrome;firefox")
     attempts = []
     for value in [part.strip() for part in raw.split(";") if part.strip()]:
         parts = [part.strip() for part in value.split(",") if part.strip()]
