@@ -1,4 +1,4 @@
-import time
+from datetime import datetime
 
 
 FEATURE_KEY = "runtime_tools"
@@ -7,8 +7,11 @@ FEATURE_KEY = "runtime_tools"
 def handle(ctx):
     if ctx.cmd != "ren":
         return False
-    started_at = getattr(ctx, "started_at", None)
-    elapsed = max(0, int(time.time() - started_at)) if started_at else 0
+    start_time = getattr(ctx, "start_time", None)
+    if isinstance(start_time, datetime):
+        elapsed = max(0, int((datetime.now() - start_time).total_seconds()))
+    else:
+        elapsed = 0
     ctx.send_template(ctx.to, build_runtime_template(elapsed))
     return True
 

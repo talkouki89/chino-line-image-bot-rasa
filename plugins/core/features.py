@@ -112,12 +112,6 @@ FEATURE_DEFINITIONS = [
         "commands": "誰標我 / 清空標註",
     },
     {
-        "key": "broadcast",
-        "name": "群發工具",
-        "description": "管理員使用的群發預覽、確認與取消工具。",
-        "commands": "群發 / 確認群發 / 取消群發",
-    },
-    {
         "key": "image_draw_template",
         "name": "抽圖模板",
         "description": "Lolicon API 抽圖、R18 抽圖、標籤抽圖與常用標籤模板。",

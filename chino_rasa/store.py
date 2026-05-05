@@ -11,7 +11,6 @@ from chino_rasa.settings import ROOT_DIR
 STATE_PATH = ROOT_DIR / "json" / "state.json"
 RECENT_PATH = ROOT_DIR / "json" / "recent_messages.json"
 FEATURE_PATH = ROOT_DIR / "json" / "features.json"
-GROUPS_PATH = ROOT_DIR / "json" / "group_ids.json"
 GROUP_SETTINGS_PATH = ROOT_DIR / "json" / "group_settings.json"
 
 
@@ -39,20 +38,6 @@ def save_user_settings(user_id: str, settings: dict[str, Any]) -> None:
     state = read_json(STATE_PATH, {})
     state.setdefault("users", {})[user_id] = settings
     write_json(STATE_PATH, state)
-
-
-def remember_group(group_id: str) -> None:
-    if not group_id:
-        return
-    groups = read_json(GROUPS_PATH, [])
-    if group_id not in groups:
-        groups.append(group_id)
-        write_json(GROUPS_PATH, groups)
-
-
-def all_groups() -> list[str]:
-    groups = read_json(GROUPS_PATH, [])
-    return [item for item in groups if isinstance(item, str)]
 
 
 def remember_message(chat_id: str, message: dict[str, Any], limit: int = 1000) -> None:

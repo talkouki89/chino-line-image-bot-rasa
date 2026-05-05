@@ -15,7 +15,7 @@
 - 抽圖：Lolicon API 隨機抽圖、R18 抽圖、標籤抽圖，模板按鈕改用 postback。
 - 下載：YouTube/yt-dlp、Facebook、Instagram、TikTok、X/Twitter、Pornhub。
 - 作品解析：nHentai、紳士漫畫、禁漫天堂、Pixiv。
-- 群組工具：歡迎訊息、群組專用發話名稱與頭像、標註查詢、群發。
+- 群組工具：歡迎訊息、群組專用發話名稱與頭像、標註查詢。
 - 圖片上傳：Freeimage.host API。
 - 管理工具：功能開關 Flex 模板、postback 切換、版本/狀態模板。
 
@@ -45,7 +45,6 @@
 │  └─ github.png                    # README 預覽圖
 ├─ plugins/                         # 所有可熱加載插件
 │  ├─ admin_profile_tools.py        # 管理員 MID、聯絡人、群組 ID、speedtest 工具
-│  ├─ broadcast.py                  # 管理員群發、預覽、確認、取消
 │  ├─ example.py                    # ping/pong 範例插件
 │  ├─ facebook_download.py          # fb: Facebook 影片下載
 │  ├─ freeimage_upload.py           # #圖片上傳，回覆圖片後上傳 Freeimage.host
@@ -61,10 +60,12 @@
 │  ├─ pornhub_download.py           # ph: Pornhub 影片下載
 │  ├─ reply_media_download.py       # 回覆搜 yt/fb/ph/ig
 │  ├─ runtime_tools.py              # ren 運行時間模板
+│  ├─ restart_tools.py              # reb @bot 重啟 Rasa server
 │  ├─ tiktok_download.py            # tk: TikTok 圖片 / 影片下載
 │  ├─ wnacg.py                      # w: 紳士漫畫解析
 │  ├─ x_download.py                 # x:URL / 回覆搜x
 │  ├─ ytdlp_download.py             # yt:URL 與 yt-dlp 共用下載工具
+│  ├─ version_tools.py              # 版本檢查 / 版本更新
 │  └─ core/                         # 插件共用工具
 │     ├─ cooldown.py                # 抽圖冷卻
 │     ├─ features.py                # 功能開關定義與讀寫
@@ -74,10 +75,16 @@
 │     ├─ template.py                # 圖搜結果 Flex 模板
 │     ├─ text_convert.py            # 繁簡轉換
 │     └─ web_image_search.py        # GGJAV 等網頁圖搜輔助
-├─ scripts/                         # Windows 啟動腳本
+├─ scripts/                         # 啟動與維護腳本
+│  ├─ cleanup_runtime.py            # 清理 logs/ 與 public/media/
+│  ├─ cleanup_runtime.ps1           # Windows 清理入口
+│  ├─ cleanup_runtime.sh            # Linux/macOS 清理入口
 │  ├─ start_action_server.ps1       # 啟動 Rasa action server
+│  ├─ start_action_server.sh        # Linux/macOS 啟動 action server
 │  ├─ start_cloudflare_tunnel.ps1   # 啟動 Cloudflare Tunnel
-│  └─ start_rasa_server.ps1         # 啟動 Rasa server
+│  ├─ start_cloudflare_tunnel.sh    # Linux/macOS 啟動 Cloudflare Tunnel
+│  ├─ start_rasa_server.ps1         # 啟動 Rasa server
+│  └─ start_rasa_server.sh          # Linux/macOS 啟動 Rasa server
 ├─ config.yml                       # Rasa pipeline / policies
 ├─ credentials.yml                  # LINE custom channel 設定
 ├─ domain.yml                       # Rasa intents / responses / actions
@@ -159,6 +166,10 @@ BOT_TIMEZONE=Asia/Taipei
 # true：修改插件後，下次訊息會自動重新載入插件。
 # false：插件只在服務啟動時載入。
 HOT_RELOAD_PLUGINS=true
+
+# [選填] Linux/VPS 使用「版本更新」或「reb @bot」自動重啟時的 systemd 服務名稱。
+# Windows 不用填。
+RASA_SYSTEMD_SERVICE=
 ```
 
 常用選填：
@@ -236,6 +247,12 @@ YANDEX_BASE_URLS=https://yandex.ru,https://ya.ru
 
 # [選填] Speedtest 測試下載 URL。
 SPEEDTEST_URL=https://speed.cloudflare.com/__down?bytes=10000000
+
+# [選填] 清理 logs/ 保留天數。
+CLEANUP_LOG_DAYS=14
+
+# [選填] 清理 public/media/ 保留小時。
+CLEANUP_PUBLIC_HOURS=48
 ```
 
 LINE Developers Webhook URL：
@@ -296,6 +313,165 @@ source .venv/bin/activate
 rasa run --enable-api --credentials credentials.yml --endpoints endpoints.yml --port 5005
 ```
 
+也可以使用：
+
+```bash
+chmod +x scripts/*.sh
+./scripts/start_action_server.sh
+./scripts/start_rasa_server.sh
+./scripts/start_cloudflare_tunnel.sh
+```
+
+## Cloudflare Tunnel
+
+如果你已經把網域接到 Cloudflare，建議使用 Named Tunnel，網址才會固定。
+
+### Linux 安裝 cloudflared
+
+Debian / Ubuntu：
+
+```bash
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
+sudo apt update
+sudo apt install cloudflared
+```
+
+建立並綁定 Tunnel：
+
+```bash
+cloudflared tunnel login
+cloudflared tunnel create chino-line-image-bot-rasa
+cloudflared tunnel route dns chino-line-image-bot-rasa chinobot.dpdns.org
+```
+
+建立 `~/.cloudflared/config.yml`：
+
+```yaml
+tunnel: chino-line-image-bot-rasa
+credentials-file: /home/你的使用者/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  - hostname: chinobot.dpdns.org
+    service: http://localhost:5005
+  - service: http_status:404
+```
+
+啟動：
+
+```bash
+cloudflared tunnel run chino-line-image-bot-rasa
+```
+
+安裝成 systemd 服務：
+
+```bash
+sudo cloudflared service install
+sudo systemctl enable --now cloudflared
+sudo systemctl status cloudflared
+```
+
+LINE Developers Webhook URL 維持：
+
+```text
+https://chinobot.dpdns.org/webhooks/line/webhook
+```
+
+### VPS 與 endpoints.yml
+
+如果 Rasa server 和 action server 都在同一台 VPS，`endpoints.yml` 可以維持：
+
+```yaml
+action_endpoint:
+  url: "http://localhost:5055/webhook"
+```
+
+只有在 action server 跑在另一台機器、Docker 另一個 service、或不同 port 時才需要改，例如：
+
+```yaml
+action_endpoint:
+  url: "http://rasa-action:5055/webhook"
+```
+
+不要把 `endpoints.yml` 的 action endpoint 設成 Cloudflare 公開網域，除非 action server 真的獨立部署且有安全控管。
+
+## systemd 範例
+
+`/etc/systemd/system/chino-rasa.service`：
+
+```ini
+[Unit]
+Description=Chino Rasa Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/chino-line-image-bot-rasa
+Environment=PYTHONUTF8=1
+Environment=PYTHONIOENCODING=utf-8
+ExecStart=/opt/chino-line-image-bot-rasa/.venv/bin/python -m rasa run --enable-api --credentials credentials.yml --endpoints endpoints.yml --port 5005
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+`/etc/systemd/system/chino-action.service`：
+
+```ini
+[Unit]
+Description=Chino Rasa Action Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/chino-line-image-bot-rasa
+Environment=PYTHONUTF8=1
+Environment=PYTHONIOENCODING=utf-8
+ExecStart=/opt/chino-line-image-bot-rasa/.venv/bin/python -m rasa run actions --port 5055
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+啟用：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now chino-action chino-rasa
+```
+
+若要讓 `reb @bot` 與 `版本更新` 自動重啟 Rasa server，`.env` 加：
+
+```env
+RASA_SYSTEMD_SERVICE=chino-rasa.service
+```
+
+## 定期清理 logs 與 public/media
+
+下載功能會把媒體暫存到 `public/media/` 給 LINE 讀取；服務長期運作時建議定期清理。
+
+手動清理：
+
+```bash
+./scripts/cleanup_runtime.sh --log-days 14 --public-hours 48
+```
+
+Windows：
+
+```powershell
+.\scripts\cleanup_runtime.ps1 --log-days 14 --public-hours 48
+```
+
+Linux cron 每天 04:30 清理：
+
+```cron
+30 4 * * * cd /opt/chino-line-image-bot-rasa && ./.venv/bin/python scripts/cleanup_runtime.py --log-days 14 --public-hours 48 >> logs/cleanup.log 2>&1
+```
+
 ## Postback 按鈕
 
 功能開關模板與抽圖模板的按鈕已改成 LINE postback：
@@ -307,7 +483,7 @@ rasa run --enable-api --credentials credentials.yml --endpoints endpoints.yml --
 
 ## 歡迎訊息
 
-管理員可在群組內設定歡迎訊息：
+一般用戶可在群組內設定歡迎訊息：
 
 ```text
 設定歡迎訊息 歡迎 {UserName} 加入 {GroupName}
@@ -326,7 +502,7 @@ rasa run --enable-api --credentials credentials.yml --endpoints endpoints.yml --
 
 LINE Messaging API 支援在每則訊息上指定 sender 的 `name` 與 `iconUrl`。這會改變訊息泡泡上的顯示名稱與頭像，不會改變官方帳號本身名稱，也不會改變聊天室列表或官方帳號資料頁。
 
-管理員可在群組內設定：
+一般用戶可在群組內設定：
 
 ```text
 設定機器人名稱 智乃圖搜
@@ -368,6 +544,8 @@ p:123456
 #圖片上傳
 誰標我 / 清空標註
 ren
+版本檢查 / 版本更新
+reb @bot
 ping
 ```
 

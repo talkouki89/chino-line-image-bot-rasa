@@ -9,7 +9,7 @@ from plugins.core.features import is_enabled, load_feature_flags
 
 from chino_rasa.line_client import LineOfficialClient, normalize_template, text_message
 from chino_rasa.settings import ROOT_DIR, Settings
-from chino_rasa.store import FEATURE_PATH, remember_group, remember_message, save_user_settings, user_settings
+from chino_rasa.store import FEATURE_PATH, remember_message, save_user_settings, user_settings
 
 
 START_TIME = datetime.now()
@@ -35,9 +35,6 @@ def build_context(
     source = event.get("source") or {}
     sender = source.get("userId") or ""
     chat_id = source.get("groupId") or source.get("roomId") or sender
-    if source.get("type") in {"group", "room"}:
-        remember_group(chat_id)
-
     msg = SimpleNamespace(
         id=message.get("id", ""),
         text=text,
@@ -66,21 +63,21 @@ def build_context(
         if reply_token:
             client.reply_messages(reply_token, messages, chat_id=chat_id)
         else:
-            client.push_messages(chat_id, messages)
+            logging.warning("Dropped reply because LINE replyToken is unavailable: chat_id=%s", chat_id)
 
     def send_template(to: str, payload: Any) -> None:
         messages = [normalize_template(payload)]
         if reply_token:
             client.reply_messages(reply_token, messages, chat_id=chat_id)
         else:
-            client.push_messages(to, messages)
+            logging.warning("Dropped template because LINE replyToken is unavailable: chat_id=%s", to)
 
     def send_flex(to: str, alt_text: str, contents: dict[str, Any]) -> None:
         messages = [{"type": "flex", "altText": alt_text[:400], "contents": contents}]
         if reply_token:
             client.reply_messages(reply_token, messages, chat_id=chat_id)
         else:
-            client.push_messages(to, messages)
+            logging.warning("Dropped flex because LINE replyToken is unavailable: chat_id=%s", to)
 
     def backup() -> None:
         save_user_settings(sender, per_user_settings)

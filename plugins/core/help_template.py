@@ -39,7 +39,6 @@ OTHER_FEATURE_KEYS = [
 ADMIN_FEATURE_KEYS = [
     "help_templates",
     "admin_profile_tools",
-    "broadcast",
     "auto_friend",
     "group_min_member_check",
     "announcement_notify",
@@ -77,7 +76,7 @@ def build_help_text(flags=None, is_admin=False, is_creator=False):
         lines.extend([
             "",
             "管理員：功能狀態 / 功能設定 / 功能切換 <key>",
-            "群組外觀：設定機器人名稱 / 設定機器人頭像 / 清除機器人外觀",
+            "系統：版本檢查 / 版本更新 / reb @bot",
         ])
         if flags is not None:
             lines.append(f"功能狀態：{feature_status_text(flags)}")
@@ -214,6 +213,7 @@ def help_gallery_bubble():
         "#圖片上傳：回覆圖片後上傳到 Freeimage.host",
         "設定歡迎訊息 內容：一般用戶可設定目前群組歡迎訊息。",
         "查看歡迎訊息 / 清除歡迎訊息：一般用戶可使用。",
+        "設定機器人名稱 / 設定機器人頭像：一般用戶可設定目前群組外觀。",
     ])
 
 
@@ -223,8 +223,8 @@ def help_admin_bubble(flags):
         "功能狀態：查看所有功能開關。",
         "功能設定：打開 postback 開關模板。",
         "功能切換 <key>：文字切換指定功能。",
-        "設定機器人名稱 名稱：設定目前群組訊息顯示名稱。",
-        "設定機器人頭像 https://...：設定目前群組訊息頭像。",
+        "版本檢查 / 版本更新：檢查 GitHub 並更新後重啟。",
+        "reb @bot：重啟目前 Bot 服務。",
         f"目前功能：{feature_status_text(flags)}",
     ])
 

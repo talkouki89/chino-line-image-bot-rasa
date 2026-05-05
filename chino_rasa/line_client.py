@@ -11,11 +11,10 @@ from typing import Any
 import requests
 
 from chino_rasa.settings import Settings
-from chino_rasa.store import all_groups, group_sender, recent_messages
+from chino_rasa.store import group_sender, recent_messages
 
 
 LINE_REPLY_URL = "https://api.line.me/v2/bot/message/reply"
-LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push"
 LINE_CONTENT_URL = "https://api-data.line.me/v2/bot/message/{message_id}/content"
 LINE_PROFILE_URL = "https://api.line.me/v2/bot/profile/{user_id}"
 LINE_GROUP_SUMMARY_URL = "https://api.line.me/v2/bot/group/{group_id}/summary"
@@ -41,7 +40,7 @@ class LineOfficialClient:
         self._post(LINE_REPLY_URL, {"replyToken": reply_token, "messages": self._with_sender(messages[:5], chat_id)})
 
     def push_messages(self, to: str, messages: list[dict[str, Any]]) -> None:
-        self._post(LINE_PUSH_URL, {"to": to, "messages": self._with_sender(messages[:5], to)})
+        logger.warning("LINE push message skipped to avoid push quota usage: to=%s count=%s", to, len(messages))
 
     def sendMessage(self, to: str, text: str) -> None:
         self.push_messages(to, [text_message(text)])
@@ -93,9 +92,6 @@ class LineOfficialClient:
 
     def getRecentMessagesV2(self, to: str, limit: int = 1000) -> list[SimpleNamespace]:
         return recent_messages(to, limit)
-
-    def getAllChatMids(self) -> list[str]:
-        return all_groups()
 
     def getContact(self, user_id: str) -> SimpleNamespace:
         response = requests.get(LINE_PROFILE_URL.format(user_id=user_id), headers=self.headers, timeout=20)

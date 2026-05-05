@@ -34,7 +34,7 @@ MEDIA_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
 
 
 def handle(ctx):
-    if ctx.cmd.startswith("x:"):
+    if ctx.cmd.lower().startswith("x:"):
         return handle_x_url(ctx)
     if ctx.cmd == "回覆搜x":
         return handle_reply_x(ctx)
@@ -94,7 +94,7 @@ def send_x_media(ctx, original_urls):
         failed_sources = []
         for original_url in original_urls:
             try:
-                media_urls = fetch_media_urls(original_url)
+                media_urls = fetch_media_items(original_url)
             except ValueError:
                 failed_sources.append(original_url)
                 continue
@@ -102,8 +102,7 @@ def send_x_media(ctx, original_urls):
                 ctx.log_error(exc)
                 failed_sources.append(original_url)
                 continue
-            for media_url in media_urls:
-                media_type = detect_file_type(media_url)
+            for media_url, media_type in media_urls:
                 if media_type == "image":
                     image_urls.append(media_url)
                 elif media_type == "video":
@@ -164,6 +163,10 @@ def is_supported_url(url):
 
 
 def fetch_media_urls(original_url, timeout=20):
+    return [url for url, _ in fetch_media_items(original_url, timeout=timeout)]
+
+
+def fetch_media_items(original_url, timeout=20):
     response = requests.get(
         convert_url(original_url),
         headers={"User-Agent": "chino-line-image-bot"},
@@ -171,7 +174,24 @@ def fetch_media_urls(original_url, timeout=20):
     )
     response.raise_for_status()
     data = response.json()
-    return data.get("mediaURLs", [])
+    items = []
+    for item in data.get("media_extended") or []:
+        if not isinstance(item, dict):
+            continue
+        url = item.get("url") or item.get("thumbnail_url")
+        media_type = str(item.get("type") or "").lower()
+        if media_type == "photo":
+            media_type = "image"
+        if media_type not in {"image", "video"}:
+            media_type = detect_file_type(url)
+        if url:
+            items.append((url, media_type if media_type in {"image", "video"} else "image"))
+    if items:
+        return items
+    for url in data.get("mediaURLs") or []:
+        media_type = detect_file_type(url)
+        items.append((url, media_type if media_type in {"image", "video"} else "image"))
+    return items
 
 
 def send_media_url(ctx, media_url):
@@ -197,7 +217,7 @@ def is_private_e2ee_send_error(ctx, exc):
 
 def detect_file_type(url):
     path = urlparse(str(url)).path.lower()
-    if path.endswith(".mp4"):
+    if any(path.endswith(ext) for ext in (".mp4", ".mov", ".m4v", ".webm")):
         return "video"
     if any(path.endswith(ext) for ext in MEDIA_IMAGE_EXTENSIONS):
         return "image"

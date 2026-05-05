@@ -30,7 +30,7 @@ def handle(ctx):
         ctx.reply("已清除目前群組的歡迎訊息。")
         return True
     if command.startswith("設定機器人名稱 "):
-        if not require_group_admin(ctx):
+        if not require_group_chat(ctx):
             return True
         name = command.split(" ", 1)[1].strip()
         if not name:
@@ -40,7 +40,7 @@ def handle(ctx):
         ctx.reply(f"已設定目前群組的機器人訊息名稱：{name[:20]}")
         return True
     if command.startswith("設定機器人頭像 "):
-        if not require_group_admin(ctx):
+        if not require_group_chat(ctx):
             return True
         icon_url = command.split(" ", 1)[1].strip()
         if not is_https_url(icon_url):
@@ -50,7 +50,7 @@ def handle(ctx):
         ctx.reply("已設定目前群組的機器人訊息頭像。")
         return True
     if command in {"查看機器人外觀", "機器人外觀"}:
-        if not require_group_admin(ctx):
+        if not require_group_chat(ctx):
             return True
         settings = group_settings(ctx.to)
         name = settings.get("bot_name") or "未設定"
@@ -58,7 +58,7 @@ def handle(ctx):
         ctx.reply(f"目前群組機器人外觀：\n名稱：{name}\n頭像：{icon_url}")
         return True
     if command == "清除機器人外觀":
-        if not require_group_admin(ctx):
+        if not require_group_chat(ctx):
             return True
         update_group_settings(ctx.to, bot_name=None, bot_icon_url=None)
         ctx.reply("已清除目前群組的機器人訊息名稱與頭像。")
