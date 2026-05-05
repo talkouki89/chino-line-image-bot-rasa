@@ -11,17 +11,26 @@ FALLBACK_IMAGE = "https://scdn.line-apps.com/n/channel_devcenter/img/fx/01_1_caf
 
 
 def handle(ctx):
+    if ctx.cmd in {"gid", "群組id", "群組ID"}:
+        if not ctx.is_admin:
+            ctx.reply("此功能只有管理員可以使用。")
+            return True
+        ctx.reply(f"目前聊天室 ID：{ctx.to or '未提供'}")
+        return True
     if ctx.cmd in {"speedtest", "測速"}:
         if not ctx.is_admin:
+            ctx.reply("此功能只有管理員可以使用。")
             return True
         threading.Thread(target=run_speedtest, args=(ctx,), daemon=True).start()
         return True
     if ctx.cmd.startswith("mid:"):
         if not ctx.is_admin:
+            ctx.reply("此功能只有管理員可以使用。")
             return True
         return handle_mid_lookup(ctx)
     if ctx.cmd.startswith("contact "):
         if not ctx.is_admin:
+            ctx.reply("此功能只有管理員可以使用。")
             return True
         return handle_contact_mention(ctx)
     return False

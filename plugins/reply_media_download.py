@@ -6,21 +6,25 @@ from plugins.ytdlp_download import extract_url, is_http_url, send_ytdlp_media_as
 
 COMMANDS = {
     "回覆搜yt": {
+        "feature": "ytdlp_download",
         "label": "影片",
         "hosts": (),
         "send": lambda ctx, url: send_ytdlp_media_async(ctx, url, label="影片"),
     },
     "回覆搜fb": {
+        "feature": "facebook_download",
         "label": "Facebook 影片",
         "hosts": ("facebook.com", "fb.watch"),
         "send": lambda ctx, url: send_ytdlp_media_async(ctx, url, label="Facebook 影片"),
     },
     "回覆搜ph": {
+        "feature": "pornhub_download",
         "label": "Pornhub 影片",
         "hosts": ("pornhub.com",),
         "send": lambda ctx, url: send_ytdlp_media_async(ctx, url, label="Pornhub 影片"),
     },
     "回覆搜ig": {
+        "feature": "instagram_download",
         "label": "Instagram 媒體",
         "hosts": ("instagram.com",),
         "send": lambda ctx, url: send_instagram_async(ctx, url),
@@ -31,7 +35,11 @@ COMMANDS = {
 def handle(ctx):
     if ctx.cmd not in COMMANDS:
         return False
-    return handle_reply_download(ctx, COMMANDS[ctx.cmd])
+    config = COMMANDS[ctx.cmd]
+    if not ctx.is_feature_enabled(config["feature"]):
+        ctx.reply(f"{config['label']} 目前已被管理員關閉。")
+        return True
+    return handle_reply_download(ctx, config)
 
 
 def handle_reply_download(ctx, config):

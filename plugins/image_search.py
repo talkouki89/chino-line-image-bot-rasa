@@ -71,9 +71,6 @@ def handle_reply_search(ctx):
         ctx.reply("請回覆一張圖片再使用圖搜指令。")
         return True
 
-    if not has_search_quota(ctx):
-        return True
-
     threading.Thread(
         target=run_reply_search,
         args=(ctx, related_message_id, engine),
@@ -84,13 +81,9 @@ def handle_reply_search(ctx):
 
 def run_reply_search(ctx, related_message_id, engine):
     save_name = temp_search_image_path(engine)
-    deducted_quota = False
     try:
         download_reply_image(ctx, related_message_id, save_name)
         result_text, video_url = search_as_text(engine, save_name)
-        deducted_quota = consume_search_quota(ctx)
-        if deducted_quota:
-            result_text += "\n\n剩餘使用次數:{day}".format(day=ctx.settings["days"])
         send_search_reply(ctx, result_text, video_url)
     except Exception as exc:
         ctx.log_error(exc)
@@ -138,32 +131,6 @@ def temp_search_image_path(engine):
     fd, path = tempfile.mkstemp(prefix=f"chino-search-{engine.lower()}-", suffix=".jpg")
     os.close(fd)
     return path
-
-
-def quota_enabled(ctx):
-    return ctx.is_feature_enabled("search_quota")
-
-
-def has_search_quota(ctx):
-    if ctx.is_admin or not quota_enabled(ctx):
-        return True
-    if ctx.settings["days"] <= 0:
-        ctx.reply("沒次數了٩(ˊᗜˋ*)و\n請找智乃添加٩(ˊᗜˋ*)و")
-        return False
-    return True
-
-
-def consume_search_quota(ctx):
-    if ctx.is_admin or not quota_enabled(ctx):
-        return False
-    ctx.settings["days"] -= 1
-    ctx.settings["sc"] += 1
-    ctx.backup()
-    return True
-
-
-def finish_search(ctx, deducted_quota):
-    return None
 
 
 def send_search_reply(ctx, result_text, video_url=None):

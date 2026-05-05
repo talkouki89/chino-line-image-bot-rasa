@@ -11,7 +11,7 @@ from urllib.parse import parse_qs
 from rasa.core.channels.channel import CollectingOutputChannel, InputChannel, UserMessage
 from sanic import Blueprint, response
 
-from chino_rasa.context import build_context
+from chino_rasa.context import build_context, write_error_log
 from chino_rasa.line_client import LineOfficialClient
 from chino_rasa.plugin_runtime import PluginRuntime
 from chino_rasa.settings import Settings
@@ -19,6 +19,11 @@ from chino_rasa.store import welcome_message
 
 
 logger = logging.getLogger(__name__)
+BOT_JOIN_MESSAGE = (
+    "感謝使用此機器\n"
+    "使用方式：輸入「圖搜說明」查看指令\n"
+    "GitHub：https://github.com/talkouki89/chino-line-image-bot-rasa"
+)
 
 
 class LineOfficialOutput(CollectingOutputChannel):
@@ -89,7 +94,8 @@ class LineOfficialInput(InputChannel):
             for event in events:
                 try:
                     await self._handle_event(event, on_new_message)
-                except Exception:
+                except Exception as exc:
+                    write_error_log(exc)
                     logger.exception("LINE webhook event failed: type=%s", event.get("type"))
             return response.text("OK")
 
@@ -99,6 +105,9 @@ class LineOfficialInput(InputChannel):
         event_type = event.get("type")
         if event_type == "postback":
             await self._handle_postback(event, on_new_message)
+            return
+        if event_type == "join":
+            self._handle_join(event)
             return
         if event_type == "memberJoined":
             self._handle_member_joined(event)
@@ -174,6 +183,15 @@ class LineOfficialInput(InputChannel):
         source = event.get("source") or {}
         user_id = source.get("userId") or ""
         return bool(user_id and (user_id == self.settings.creator or user_id in self.settings.admin_user_ids))
+
+    def _handle_join(self, event: dict[str, Any]) -> None:
+        source = event.get("source") or {}
+        chat_id = source.get("groupId") or source.get("roomId")
+        reply_token = event.get("replyToken")
+        if not chat_id or not reply_token:
+            logger.info("LINE join event skipped: chat_id=%s has_reply_token=%s", chat_id, bool(reply_token))
+            return
+        self.client.reply_messages(reply_token, [{"type": "text", "text": BOT_JOIN_MESSAGE}], chat_id=chat_id)
 
     def _handle_member_joined(self, event: dict[str, Any]) -> None:
         source = event.get("source") or {}

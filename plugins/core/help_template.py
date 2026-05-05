@@ -31,17 +31,12 @@ OTHER_FEATURE_KEYS = [
     "jmcomic",
     "pixiv",
     "runtime_tools",
-    "mention_tools",
     "group_settings",
-    "search_quota",
 ]
 
 ADMIN_FEATURE_KEYS = [
     "help_templates",
     "admin_profile_tools",
-    "auto_friend",
-    "group_min_member_check",
-    "announcement_notify",
 ]
 
 
@@ -69,7 +64,7 @@ def build_help_text(flags=None, is_admin=False, is_creator=False):
         "下載：yt:URL / fb:URL / ig:URL / tk:URL / x:URL / ph:URL",
         "抽圖：抽圖 / 色圖 / r18色圖 / tag色圖 標籤",
         "解析：n:編號 / n:popular / w:編號 / c:編號 / p:URL",
-        "其他：#圖片上傳 / 誰標我 / 清空標註 / ren",
+        "其他：#圖片上傳 / ren / ping",
         "群組歡迎：設定歡迎訊息 內容 / 查看歡迎訊息 / 清除歡迎訊息",
     ]
     if is_admin or is_creator:
@@ -169,7 +164,7 @@ def help_public_bubble():
         "一般用戶功能",
         "輸入圖搜說明可打開此模板。",
         "回覆圖片後可使用圖搜、模板搜與快捷 #1/#2/#3。",
-        "可使用下載、作品解析、抽圖、圖片上傳、標註查詢與運行時間功能。",
+        "可使用下載、作品解析、抽圖、圖片上傳與運行時間功能。",
     ], footer_buttons=[uri_button("GitHub", GITHUB_URL)])
 
 
@@ -223,6 +218,9 @@ def help_admin_bubble(flags):
         "功能狀態：查看所有功能開關。",
         "功能設定：打開 postback 開關模板。",
         "功能切換 <key>：文字切換指定功能。",
+        "mymid / gid：查看自己的 userId 或目前聊天室 ID。",
+        "mid:USER_ID / Contact @使用者：查詢 LINE 官方個人資料。",
+        "speedtest / 測速：測試目前伺服器網路。",
         "版本檢查 / 版本更新：檢查 GitHub 並更新後重啟。",
         "reb @bot：重啟目前 Bot 服務。",
         f"目前功能：{feature_status_text(flags)}",

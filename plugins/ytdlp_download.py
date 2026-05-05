@@ -78,6 +78,7 @@ def download_and_send_media(ctx, url, label="媒體", prefer_direct=False, use_d
         if failed:
             ctx.reply(f"有 {failed} 個{label}檔案傳送失敗。")
     except MediaDownloadUserError as exc:
+        ctx.log_error(exc)
         ctx.reply(exc.message)
     except Exception as exc:
         ctx.log_error(exc)
@@ -134,6 +135,8 @@ def build_ytdlp_options(output_dir):
     cookies_file = resolve_project_path(cookies_file)
     if cookies_file and os.path.exists(cookies_file):
         ydl_opts["cookiefile"] = cookies_file
+    elif os.getenv("YTDLP_COOKIE", "").strip():
+        ydl_opts["http_headers"] = request_headers()
     else:
         ydl_opts.update(load_cookie_options())
     return ydl_opts

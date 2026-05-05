@@ -39,8 +39,7 @@
 │  └─ rules.yml                     # rule policy 流程
 ├─ json/                            # runtime 狀態範例
 │  ├─ features.example.json         # 功能開關範例
-│  ├─ group_settings.example.json   # 群組歡迎訊息/外觀設定範例
-│  └─ state.example.json            # 使用者設定範例
+│  └─ group_settings.example.json   # 群組歡迎訊息/外觀設定範例
 ├─ pic/                             # README / GitHub 顯示圖片
 │  └─ github.png                    # README 預覽圖
 ├─ plugins/                         # 所有可熱加載插件
@@ -54,7 +53,6 @@
 │  ├─ image_search.py               # 回覆圖片圖搜、模板搜、PicImageSearch 調用
 │  ├─ instagram_download.py         # ig: Instagram 圖片 / 影片下載
 │  ├─ jmcomic_lookup.py             # c: 禁漫天堂解析
-│  ├─ mention_tools.py              # 誰標我 / 清空標註
 │  ├─ nhentai.py                    # nHentai 編號解析與 Popular Now
 │  ├─ pixiv_lookup.py               # p: Pixiv 作品解析
 │  ├─ pornhub_download.py           # ph: Pornhub 影片下載
@@ -208,7 +206,8 @@ YTDLP_AUTO_BROWSER_COOKIES=true
 YTDLP_AUTO_BROWSER_COOKIE_SOURCES=edge;chrome;firefox
 
 # [選填] 直接填入 cookie 字串。
-# IG / TikTok 等下載 fallback 會用到；不要提交到 Git。
+# 沒有 cookies.txt 時，yt-dlp 會用它當 Cookie header；IG / TikTok fallback 也會用到。
+# 不要提交到 Git。
 YTDLP_COOKIE=
 
 # [選填] Instaloader session 使用者名稱。
@@ -233,12 +232,6 @@ LINE_ACCESS_TOKEN=
 # [選填] 舊版管理員欄位，仍會被讀取。
 # 建議新設定改用 ADMIN_USER_IDS。
 ADMIN_MIDS=
-
-# [選填] 是否啟用群組最低人數檢查。
-GROUP_MIN_MEMBER_CHECK=true
-
-# [選填] 群組最低人數門檻。
-GROUP_MIN_MEMBERS=10
 
 # [選填] yt-dlp 執行檔名稱或完整路徑。
 YTDLP_BIN=yt-dlp
@@ -492,6 +485,14 @@ Linux cron 每天 04:30 清理：
 
 ## 歡迎訊息
 
+Bot 被邀請進群組或多人聊天室時，會先回覆：
+
+```text
+感謝使用此機器
+使用方式：輸入「圖搜說明」查看指令
+GitHub：https://github.com/talkouki89/chino-line-image-bot-rasa
+```
+
 一般用戶可在群組內設定歡迎訊息：
 
 ```text
@@ -551,8 +552,9 @@ c:123456
 p:123456
 
 #圖片上傳
-誰標我 / 清空標註
 ren
+mymid / gid / speedtest
+mid:USER_ID / Contact @使用者
 版本檢查 / 版本更新
 reb @bot
 ping

@@ -10,7 +10,7 @@ from plugins.core.features import is_enabled, load_feature_flags
 
 from chino_rasa.line_client import LineOfficialClient, normalize_template, text_message
 from chino_rasa.settings import ROOT_DIR, Settings
-from chino_rasa.store import FEATURE_PATH, remember_message, save_user_settings, user_settings
+from chino_rasa.store import FEATURE_PATH, remember_message
 
 
 START_TIME = datetime.now()
@@ -58,8 +58,6 @@ def build_context(
         },
     )
     feature_flags = load_feature_flags(str(FEATURE_PATH))
-    per_user_settings = user_settings(sender)
-
     def reply(payload: Any) -> None:
         messages = normalize_reply_payload(payload)
         if reply_token:
@@ -81,9 +79,6 @@ def build_context(
         else:
             logging.warning("Dropped flex because LINE replyToken is unavailable: chat_id=%s", to)
 
-    def backup() -> None:
-        save_user_settings(sender, per_user_settings)
-
     def log_error(error: Any) -> None:
         logging.exception("Plugin error: %s", error)
         write_error_log(error)
@@ -97,15 +92,12 @@ def build_context(
         sender=sender,
         to=chat_id,
         cl=client,
-        settings=per_user_settings,
         is_creator=bool(sender and sender == settings.creator),
         is_admin=bool(sender and sender in settings.admin_user_ids),
         start_time=START_TIME,
-        tag_dir=str(ROOT_DIR / "tag"),
         reply=reply,
         send_template=send_template,
         send_flex=send_flex,
-        backup=backup,
         log_error=log_error,
         is_feature_enabled=lambda key: is_enabled(feature_flags, key),
     )

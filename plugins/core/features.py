@@ -106,12 +106,6 @@ FEATURE_DEFINITIONS = [
         "commands": "ren",
     },
     {
-        "key": "mention_tools",
-        "name": "標註工具",
-        "description": "查詢誰標註我，或清空目前標註紀錄。",
-        "commands": "誰標我 / 清空標註",
-    },
-    {
         "key": "image_draw_template",
         "name": "抽圖模板",
         "description": "Lolicon API 抽圖、R18 抽圖、標籤抽圖與常用標籤模板。",
@@ -152,31 +146,6 @@ FEATURE_DEFINITIONS = [
         "name": "群組設定",
         "description": "群組歡迎訊息與群組專用發話名稱/頭像。",
         "commands": "設定歡迎訊息 / 清除歡迎訊息 / 設定機器人名稱 / 設定機器人頭像",
-    },
-    {
-        "key": "auto_friend",
-        "name": "自動好友訊息",
-        "description": "加入好友時的自動回覆訊息。",
-        "commands": "AUTO_FRIEND_MESSAGE",
-    },
-    {
-        "key": "group_min_member_check",
-        "name": "群組最低人數檢查",
-        "description": "限制 Bot 只在達到最低人數的群組內運作。",
-        "commands": "GROUP_MIN_MEMBER_CHECK / GROUP_MIN_MEMBERS",
-    },
-    {
-        "key": "search_quota",
-        "name": "圖搜次數限制",
-        "description": "限制一般使用者每日圖片搜尋次數；管理員不扣次數。",
-        "commands": "回覆搜圖 / 模板搜",
-    },
-    {
-        "key": "announcement_notify",
-        "name": "公告通知",
-        "description": "保留給公告/更新通知使用。",
-        "commands": "公告通知",
-        "default": False,
     },
 ]
 

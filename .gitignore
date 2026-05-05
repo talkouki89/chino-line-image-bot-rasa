@@ -14,12 +14,9 @@ logs/
 errorLog.txt
 
 json/features.json
-json/state.json
 json/recent_messages.json
-json/group_ids.json
 json/group_settings.json
 json/images/
-tag/*.json
 public/media/
 cookies.txt
 .sessions/

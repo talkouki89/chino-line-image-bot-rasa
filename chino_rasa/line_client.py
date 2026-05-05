@@ -42,36 +42,6 @@ class LineOfficialClient:
     def push_messages(self, to: str, messages: list[dict[str, Any]]) -> None:
         logger.warning("LINE push message skipped to avoid push quota usage: to=%s count=%s", to, len(messages))
 
-    def sendMessage(self, to: str, text: str) -> None:
-        self.push_messages(to, [text_message(text)])
-
-    def sendReplyMessage(self, msg_id: str, to: str, text: str) -> None:
-        self.sendMessage(to, text)
-
-    def relatedMessage(self, to: str, text: str, msg_id: str | None = None) -> None:
-        self.sendMessage(to, text)
-
-    def sendImageWithURL(self, to: str, image_url: str) -> None:
-        self.push_messages(to, [image_message(image_url)])
-
-    def sendVideoWithURL(self, to: str, video_url: str) -> None:
-        self.push_messages(to, [video_message(video_url)])
-
-    def sendImage(self, to: str, path: str) -> None:
-        url = self.publish_local_file(path)
-        self.sendImageWithURL(to, url)
-
-    def sendVideo(self, to: str, path: str) -> None:
-        url = self.publish_local_file(path)
-        self.sendVideoWithURL(to, url)
-
-    def sendFlex(self, to: str, alt_text: str, contents: dict[str, Any]) -> None:
-        self.push_messages(to, [{"type": "flex", "altText": alt_text[:400], "contents": contents}])
-
-    def sendTemplate(self, to: str, template: Any) -> None:
-        message = normalize_template(template)
-        self.push_messages(to, [message])
-
     def downloadReplyImage(self, to: str, message_id: str, saveAs: str, objFrom: str | None = None) -> str:
         return self.downloadObjectMsg(message_id, returnAs="path", saveAs=saveAs, objFrom=objFrom)
 
@@ -181,14 +151,6 @@ class LineOfficialClient:
 
 def text_message(text: str) -> dict[str, str]:
     return {"type": "text", "text": str(text)[:5000]}
-
-
-def image_message(url: str) -> dict[str, str]:
-    return {"type": "image", "originalContentUrl": url, "previewImageUrl": url}
-
-
-def video_message(url: str) -> dict[str, str]:
-    return {"type": "video", "originalContentUrl": url, "previewImageUrl": url}
 
 
 def normalize_template(template: Any) -> dict[str, Any]:

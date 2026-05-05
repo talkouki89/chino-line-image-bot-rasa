@@ -8,7 +8,6 @@ from typing import Any
 from chino_rasa.settings import ROOT_DIR
 
 
-STATE_PATH = ROOT_DIR / "json" / "state.json"
 RECENT_PATH = ROOT_DIR / "json" / "recent_messages.json"
 FEATURE_PATH = ROOT_DIR / "json" / "features.json"
 GROUP_SETTINGS_PATH = ROOT_DIR / "json" / "group_settings.json"
@@ -24,20 +23,6 @@ def read_json(path: Path, default: Any) -> Any:
 def write_json(path: Path, data: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
-
-
-def user_settings(user_id: str) -> dict[str, Any]:
-    state = read_json(STATE_PATH, {})
-    users = state.setdefault("users", {})
-    settings = users.setdefault(user_id, {"days": 30, "sc": 0})
-    write_json(STATE_PATH, state)
-    return settings
-
-
-def save_user_settings(user_id: str, settings: dict[str, Any]) -> None:
-    state = read_json(STATE_PATH, {})
-    state.setdefault("users", {})[user_id] = settings
-    write_json(STATE_PATH, state)
 
 
 def remember_message(chat_id: str, message: dict[str, Any], limit: int = 1000) -> None:
