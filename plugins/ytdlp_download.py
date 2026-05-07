@@ -42,7 +42,7 @@ class MediaDownloadUserError(Exception):
 
 
 def handle(ctx):
-    if ctx.cmd.startswith("yt:"):
+    if ctx.cmd.lower().startswith("yt:"):
         return handle_ytdlp(ctx)
     return False
 

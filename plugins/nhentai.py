@@ -22,7 +22,8 @@ FEATURE_KEY = "nhentai"
 
 
 def handle(ctx):
-    if ctx.cmd.strip() in {"n:popular", "n:pop", "n:熱門"}:
+    command = ctx.cmd.strip()
+    if command.lower() in {"n:popular", "n:pop", "n:熱門"}:
         try:
             popular_items = fetch_popular_now()
         except Exception as exc:
@@ -37,7 +38,7 @@ def handle(ctx):
         ctx.send_template(ctx.to, build_popular_flex(popular_items))
         return True
 
-    match = re.fullmatch(r"n:(\d{1,8})", ctx.cmd.strip())
+    match = re.fullmatch(r"n:(\d{1,8})", command, re.IGNORECASE)
     if not match:
         return False
 

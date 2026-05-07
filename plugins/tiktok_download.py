@@ -5,7 +5,7 @@ FEATURE_KEY = "tiktok_download"
 
 
 def handle(ctx):
-    if not ctx.cmd.startswith("tk:"):
+    if not ctx.cmd.lower().startswith("tk:"):
         return False
     url = extract_url(ctx.text.split(":", 1)[1] if ":" in ctx.text else "")
     if not url:

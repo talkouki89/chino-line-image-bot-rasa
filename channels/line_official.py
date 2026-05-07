@@ -15,7 +15,7 @@ from chino_rasa.context import build_context, write_error_log
 from chino_rasa.line_client import LineOfficialClient
 from chino_rasa.plugin_runtime import PluginRuntime
 from chino_rasa.settings import Settings
-from chino_rasa.store import welcome_message
+from chino_rasa.store import remember_chat, welcome_message
 
 
 logger = logging.getLogger(__name__)
@@ -186,6 +186,7 @@ class LineOfficialInput(InputChannel):
 
     def _handle_join(self, event: dict[str, Any]) -> None:
         source = event.get("source") or {}
+        remember_chat(source)
         chat_id = source.get("groupId") or source.get("roomId")
         reply_token = event.get("replyToken")
         if not chat_id or not reply_token:
@@ -195,6 +196,7 @@ class LineOfficialInput(InputChannel):
 
     def _handle_member_joined(self, event: dict[str, Any]) -> None:
         source = event.get("source") or {}
+        remember_chat(source)
         chat_id = source.get("groupId") or source.get("roomId")
         if not chat_id:
             return

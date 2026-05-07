@@ -43,7 +43,7 @@
 ├─ pic/                             # README / GitHub 顯示圖片
 │  └─ github.png                    # README 預覽圖
 ├─ plugins/                         # 所有可熱加載插件
-│  ├─ admin_profile_tools.py        # 管理員 MID、聯絡人、群組 ID、speedtest 工具
+│  ├─ admin_profile_tools.py        # 管理員 MID、聯絡人、群組 ID、機器人一覽、speedtest 工具
 │  ├─ example.py                    # ping/pong 範例插件
 │  ├─ facebook_download.py          # fb: Facebook 影片下載
 │  ├─ freeimage_upload.py           # #圖片上傳，回覆圖片後上傳 Freeimage.host
@@ -523,6 +523,16 @@ LINE Messaging API 支援在每則訊息上指定 sender 的 `name` 與 `iconUrl
 
 注意：頭像網址必須是 LINE 可讀取的 HTTPS 圖片 URL。
 
+## 機器人一覽
+
+管理員可以輸入：
+
+```text
+機器人一覽
+```
+
+這會顯示 LINE 官方 Insights 的好友數、目前本機看過的群組數、多人聊天室數與私聊用戶記錄。好友數通常是前一天資料；群組數來自本機 webhook 記錄，因為 LINE 官方 Messaging API 沒有提供「列出 Bot 所在全部群組」的全域 API。
+
 ## 常用指令
 
 ```text
@@ -553,7 +563,7 @@ p:123456
 
 #圖片上傳
 ren
-mymid / gid / speedtest
+mymid / gid / 機器人一覽 / speedtest
 mid:USER_ID / Contact @使用者
 版本檢查 / 版本更新
 reb @bot

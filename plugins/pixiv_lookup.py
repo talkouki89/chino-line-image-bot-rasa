@@ -19,7 +19,7 @@ FEATURE_KEY = "pixiv"
 
 
 def handle(ctx):
-    match = re.fullmatch(r"p:(\d{1,12})", ctx.cmd.strip())
+    match = re.fullmatch(r"p:(\d{1,12})", ctx.cmd.strip(), re.IGNORECASE)
     if not match:
         return False
 

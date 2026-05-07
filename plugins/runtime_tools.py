@@ -5,7 +5,7 @@ FEATURE_KEY = "runtime_tools"
 
 
 def handle(ctx):
-    if ctx.cmd != "ren":
+    if ctx.cmd.lower() != "ren":
         return False
     start_time = getattr(ctx, "start_time", None)
     if isinstance(start_time, datetime):

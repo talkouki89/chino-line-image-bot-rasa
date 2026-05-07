@@ -24,8 +24,8 @@ DISABLED_COMMANDS = {
     "instagram_download": {"exact": {"回覆搜ig"}, "prefixes": ("ig:", "IG:")},
     "tiktok_download": {"prefixes": ("tk:", "TK:")},
     "admin_profile_tools": {
-        "exact": {"mymid", "myid", "我是誰", "gid", "群組id", "speedtest", "測速", "版本檢查", "檢查更新", "版本更新", "reb", "reb@bot", "reb @bot", "重啟bot", "重啟 bot", "重啟機器人"},
-        "prefixes": ("mid:", "MID:", "contact ", "Contact "),
+        "exact": {"mymid", "myid", "我是誰", "gid", "群組id", "機器人一覽", "botinfo", "bot info", "bot狀態", "bot 狀態", "speedtest", "測速", "版本檢查", "檢查更新", "版本更新", "reb", "reb@bot", "reb @bot", "重啟bot", "重啟 bot", "重啟機器人"},
+        "prefixes": ("mid:", "contact "),
     },
     "runtime_tools": {"exact": {"ren"}},
     "image_draw_template": {
@@ -115,9 +115,10 @@ def disabled_command_matches(feature_key, command):
     if not config:
         return False
     command = str(command or "").strip()
-    if command in config.get("exact", set()):
-        return True
     lowered = command.lower()
+    exact = {str(item).lower() for item in config.get("exact", set())}
+    if lowered in exact:
+        return True
     return any(lowered.startswith(prefix.lower()) for prefix in config.get("prefixes", ()))
 
 

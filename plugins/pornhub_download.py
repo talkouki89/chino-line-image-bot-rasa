@@ -5,7 +5,7 @@ FEATURE_KEY = "pornhub_download"
 
 
 def handle(ctx):
-    if not ctx.cmd.startswith("ph:"):
+    if not ctx.cmd.lower().startswith("ph:"):
         return False
     url = extract_url(ctx.text.split(":", 1)[1] if ":" in ctx.text else "")
     if not url:

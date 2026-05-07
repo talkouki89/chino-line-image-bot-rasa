@@ -36,7 +36,7 @@ MEDIA_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
 def handle(ctx):
     if ctx.cmd.lower().startswith("x:"):
         return handle_x_url(ctx)
-    if ctx.cmd == "回覆搜x":
+    if ctx.cmd.lower() == "回覆搜x":
         return handle_reply_x(ctx)
     return False
 

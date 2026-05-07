@@ -21,7 +21,7 @@ FEATURE_KEY = "jmcomic"
 
 
 def handle(ctx):
-    match = re.fullmatch(r"c:(\d{1,12})", ctx.cmd.strip())
+    match = re.fullmatch(r"c:(\d{1,12})", ctx.cmd.strip(), re.IGNORECASE)
     if not match:
         return False
 

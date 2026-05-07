@@ -18,8 +18,11 @@ LINE_REPLY_URL = "https://api.line.me/v2/bot/message/reply"
 LINE_CONTENT_URL = "https://api-data.line.me/v2/bot/message/{message_id}/content"
 LINE_PROFILE_URL = "https://api.line.me/v2/bot/profile/{user_id}"
 LINE_GROUP_SUMMARY_URL = "https://api.line.me/v2/bot/group/{group_id}/summary"
+LINE_GROUP_MEMBER_COUNT_URL = "https://api.line.me/v2/bot/group/{group_id}/members/count"
+LINE_ROOM_MEMBER_COUNT_URL = "https://api.line.me/v2/bot/room/{room_id}/members/count"
 LINE_GROUP_MEMBER_PROFILE_URL = "https://api.line.me/v2/bot/group/{group_id}/member/{user_id}"
 LINE_ROOM_MEMBER_PROFILE_URL = "https://api.line.me/v2/bot/room/{room_id}/member/{user_id}"
+LINE_INSIGHT_FOLLOWERS_URL = "https://api.line.me/v2/bot/insight/followers"
 logger = logging.getLogger(__name__)
 
 
@@ -86,6 +89,32 @@ class LineOfficialClient:
             groupName=data.get("groupName", group_id),
             pictureUrl=data.get("pictureUrl", ""),
         )
+
+    def get_followers(self, date: str) -> SimpleNamespace:
+        response = requests.get(
+            LINE_INSIGHT_FOLLOWERS_URL,
+            headers=self.headers,
+            params={"date": date},
+            timeout=20,
+        )
+        response.raise_for_status()
+        data = response.json()
+        return SimpleNamespace(
+            status=data.get("status", ""),
+            followers=data.get("followers"),
+            targetedReaches=data.get("targetedReaches"),
+            blocks=data.get("blocks"),
+        )
+
+    def get_group_member_count(self, group_id: str) -> int:
+        response = requests.get(LINE_GROUP_MEMBER_COUNT_URL.format(group_id=group_id), headers=self.headers, timeout=20)
+        response.raise_for_status()
+        return int(response.json().get("count", 0))
+
+    def get_room_member_count(self, room_id: str) -> int:
+        response = requests.get(LINE_ROOM_MEMBER_COUNT_URL.format(room_id=room_id), headers=self.headers, timeout=20)
+        response.raise_for_status()
+        return int(response.json().get("count", 0))
 
     def get_group_member_profile(self, group_id: str, user_id: str) -> SimpleNamespace:
         response = requests.get(

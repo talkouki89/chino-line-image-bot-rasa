@@ -11,6 +11,7 @@ from chino_rasa.settings import ROOT_DIR
 RECENT_PATH = ROOT_DIR / "json" / "recent_messages.json"
 FEATURE_PATH = ROOT_DIR / "json" / "features.json"
 GROUP_SETTINGS_PATH = ROOT_DIR / "json" / "group_settings.json"
+CHAT_REGISTRY_PATH = ROOT_DIR / "json" / "chat_registry.json"
 
 
 def read_json(path: Path, default: Any) -> Any:
@@ -33,6 +34,41 @@ def remember_message(chat_id: str, message: dict[str, Any], limit: int = 1000) -
     items.append(message)
     data[chat_id] = items[-limit:]
     write_json(RECENT_PATH, data)
+
+
+def remember_chat(source: dict[str, Any]) -> None:
+    chat_type = source.get("type") or ""
+    chat_id = source.get("groupId") or source.get("roomId") or source.get("userId") or ""
+    if not chat_id:
+        return
+    data = read_json(CHAT_REGISTRY_PATH, {"groups": {}, "rooms": {}, "users": {}})
+    if chat_type == "group" or source.get("groupId"):
+        bucket = "groups"
+    elif chat_type == "room" or source.get("roomId"):
+        bucket = "rooms"
+    else:
+        bucket = "users"
+    items = data.setdefault(bucket, {})
+    items[chat_id] = {
+        "id": chat_id,
+        "type": bucket[:-1],
+        "last_seen": str(message_timestamp()),
+    }
+    write_json(CHAT_REGISTRY_PATH, data)
+
+
+def bot_chat_counts() -> dict[str, Any]:
+    data = read_json(CHAT_REGISTRY_PATH, {"groups": {}, "rooms": {}, "users": {}})
+    groups = data.get("groups") or {}
+    rooms = data.get("rooms") or {}
+    users = data.get("users") or {}
+    return {
+        "groups": len(groups),
+        "rooms": len(rooms),
+        "users": len(users),
+        "group_ids": sorted(groups.keys()),
+        "room_ids": sorted(rooms.keys()),
+    }
 
 
 def recent_messages(chat_id: str, limit: int = 1000) -> list[SimpleNamespace]:
@@ -80,3 +116,9 @@ def group_sender(chat_id: str) -> dict[str, str]:
 
 def welcome_message(chat_id: str) -> str:
     return str(group_settings(chat_id).get("welcome_message") or "").strip()
+
+
+def message_timestamp() -> str:
+    from datetime import datetime
+
+    return datetime.now().isoformat(timespec="seconds")

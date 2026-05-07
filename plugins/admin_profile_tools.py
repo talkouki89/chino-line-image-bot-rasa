@@ -3,37 +3,110 @@ import re
 import subprocess
 import sys
 import threading
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
+from chino_rasa.store import bot_chat_counts
 
 FEATURE_KEY = "admin_profile_tools"
-MID_RE = re.compile(r"^mid:([A-Za-z0-9_-]+)$")
+MID_RE = re.compile(r"^mid:([A-Za-z0-9_-]+)$", re.IGNORECASE)
 FALLBACK_IMAGE = "https://scdn.line-apps.com/n/channel_devcenter/img/fx/01_1_cafe.png"
 
 
 def handle(ctx):
-    if ctx.cmd in {"gid", "群組id", "群組ID"}:
+    command = ctx.cmd.strip()
+    command_lower = command.lower()
+    if command_lower in {"機器人一覽", "botinfo", "bot info", "bot狀態", "bot 狀態"}:
+        if not ctx.is_admin:
+            ctx.reply("此功能只有管理員可以使用。")
+            return True
+        return handle_bot_overview(ctx)
+    if command_lower in {"gid", "群組id"}:
         if not ctx.is_admin:
             ctx.reply("此功能只有管理員可以使用。")
             return True
         ctx.reply(f"目前聊天室 ID：{ctx.to or '未提供'}")
         return True
-    if ctx.cmd in {"speedtest", "測速"}:
+    if command_lower in {"speedtest", "測速"}:
         if not ctx.is_admin:
             ctx.reply("此功能只有管理員可以使用。")
             return True
         threading.Thread(target=run_speedtest, args=(ctx,), daemon=True).start()
         return True
-    if ctx.cmd.startswith("mid:"):
+    if command_lower.startswith("mid:"):
         if not ctx.is_admin:
             ctx.reply("此功能只有管理員可以使用。")
             return True
         return handle_mid_lookup(ctx)
-    if ctx.cmd.startswith("contact "):
+    if command_lower.startswith("contact "):
         if not ctx.is_admin:
             ctx.reply("此功能只有管理員可以使用。")
             return True
         return handle_contact_mention(ctx)
     return False
+
+
+def handle_bot_overview(ctx):
+    counts = bot_chat_counts()
+    follower_date = insight_date()
+    lines = [
+        "機器人一覽",
+        f"好友數量：{followers_text(ctx, follower_date)}",
+        f"群組數量：{counts['groups']} 個",
+        f"多人聊天室數量：{counts['rooms']} 個",
+        f"私聊用戶記錄：{counts['users']} 個",
+    ]
+    member_total, failed = observed_group_member_total(ctx, counts)
+    if member_total is not None:
+        lines.append(f"已知群組成員合計：{member_total} 人")
+    if failed:
+        lines.append(f"有 {failed} 個聊天室無法取得成員數。")
+    lines.extend([
+        "",
+        "好友數來自 LINE 官方 Insights，通常是前一天資料。",
+        "群組數是本機 webhook 已看過的群組，LINE 官方 API 不提供全域群組清單。",
+    ])
+    ctx.reply("\n".join(lines))
+    return True
+
+
+def insight_date():
+    return (datetime.now(ZoneInfo("Asia/Tokyo")) - timedelta(days=1)).strftime("%Y%m%d")
+
+
+def followers_text(ctx, date):
+    try:
+        data = ctx.cl.get_followers(date)
+    except Exception as exc:
+        ctx.log_error(exc)
+        return f"讀取失敗（查詢日期 {date}）"
+    if data.status and data.status != "ready":
+        return f"尚未準備完成（status={data.status}, 查詢日期 {date}）"
+    value = data.followers
+    if value is None:
+        return f"無資料（查詢日期 {date}）"
+    return f"{value} 人（{date}）"
+
+
+def observed_group_member_total(ctx, counts):
+    total = 0
+    failed = 0
+    found = False
+    for group_id in counts.get("group_ids", []):
+        try:
+            total += ctx.cl.get_group_member_count(group_id)
+            found = True
+        except Exception as exc:
+            ctx.log_error(exc)
+            failed += 1
+    for room_id in counts.get("room_ids", []):
+        try:
+            total += ctx.cl.get_room_member_count(room_id)
+            found = True
+        except Exception as exc:
+            ctx.log_error(exc)
+            failed += 1
+    return (total if found else None), failed
 
 
 def handle_mid_lookup(ctx):

@@ -5,7 +5,7 @@ FEATURE_KEY = "facebook_download"
 
 
 def handle(ctx):
-    if not ctx.cmd.startswith("fb:"):
+    if not ctx.cmd.lower().startswith("fb:"):
         return False
     url = extract_url(ctx.text.split(":", 1)[1] if ":" in ctx.text else "")
     if not url:

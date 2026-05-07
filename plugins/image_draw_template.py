@@ -40,6 +40,7 @@ RANDOM_IMAGE_COMMANDS = {
     "無ai r18": (1, True),
     "r18色圖無ai": (1, True),
 }
+RANDOM_IMAGE_COMMANDS_NORMALIZED = {key.lower(): value for key, value in RANDOM_IMAGE_COMMANDS.items()}
 TAG_IMAGE_PREFIXES = ("tag色圖", "色圖tag", "找色圖", "標籤抽圖", "test3")
 
 GAME_TAGS = [
@@ -102,15 +103,16 @@ CHARACTER_TAGS = [
 
 def handle(ctx):
     command = ctx.cmd.strip()
+    command_lower = command.lower()
     if command in {"抽圖", "抽圖片", "抽色圖", "抽圖模板", "抽圖說明", "抽圖功能"}:
         ctx.send_template(ctx.to, build_draw_template())
         return True
-    if command in RANDOM_IMAGE_COMMANDS:
+    if command_lower in RANDOM_IMAGE_COMMANDS_NORMALIZED:
         if not check_lolicon_cooldown(ctx):
             return True
-        r18, exclude_ai = RANDOM_IMAGE_COMMANDS[command]
+        r18, exclude_ai = RANDOM_IMAGE_COMMANDS_NORMALIZED[command_lower]
         return handle_random_lolicon(ctx, r18=r18, exclude_ai=exclude_ai)
-    if command.startswith(TAG_IMAGE_PREFIXES):
+    if command_lower.startswith(tuple(prefix.lower() for prefix in TAG_IMAGE_PREFIXES)):
         return handle_lolicon_tags(ctx)
     return False
 
@@ -224,9 +226,16 @@ def send_lolicon_result(ctx, data, label):
 
 def format_ai_flag(ai_type):
     try:
-        return "否" if int(ai_type or 0) == 0 else "是"
+        value = int(ai_type or 0)
     except (TypeError, ValueError):
-        return "否" if not ai_type else "是"
+        return "未知" if ai_type else "否"
+    if value == 0:
+        return "否"
+    if value == 1:
+        return "未知"
+    if value == 2:
+        return "是"
+    return f"未知({value})"
 
 
 def format_bool_flag(value):

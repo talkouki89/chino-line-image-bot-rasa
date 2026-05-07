@@ -6,7 +6,7 @@ The bot reloads this plugin without logging in again.
 
 
 def handle(ctx):
-    if ctx.cmd == "ping":
+    if ctx.cmd.lower() == "ping":
         ctx.reply("pong")
         return True
     return False

@@ -16,6 +16,7 @@ errorLog.txt
 json/features.json
 json/recent_messages.json
 json/group_settings.json
+json/chat_registry.json
 json/images/
 public/media/
 cookies.txt

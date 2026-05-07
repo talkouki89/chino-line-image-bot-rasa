@@ -10,7 +10,7 @@ from plugins.core.features import is_enabled, load_feature_flags
 
 from chino_rasa.line_client import LineOfficialClient, normalize_template, text_message
 from chino_rasa.settings import ROOT_DIR, Settings
-from chino_rasa.store import FEATURE_PATH, remember_message
+from chino_rasa.store import FEATURE_PATH, remember_chat, remember_message
 
 
 START_TIME = datetime.now()
@@ -35,6 +35,7 @@ def build_context(
 
     text = message.get("text", "")
     source = event.get("source") or {}
+    remember_chat(source)
     sender = source.get("userId") or ""
     chat_id = source.get("groupId") or source.get("roomId") or sender
     msg = SimpleNamespace(

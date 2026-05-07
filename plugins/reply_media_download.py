@@ -33,9 +33,11 @@ COMMANDS = {
 
 
 def handle(ctx):
-    if ctx.cmd not in COMMANDS:
+    command = ctx.cmd.strip().lower()
+    commands = {key.lower(): value for key, value in COMMANDS.items()}
+    if command not in commands:
         return False
-    config = COMMANDS[ctx.cmd]
+    config = commands[command]
     if not ctx.is_feature_enabled(config["feature"]):
         ctx.reply(f"{config['label']} 目前已被管理員關閉。")
         return True

@@ -46,7 +46,7 @@ ACCESS_LIMIT_MARKERS = (
 
 
 def handle(ctx):
-    if not ctx.cmd.startswith("ig:"):
+    if not ctx.cmd.lower().startswith("ig:"):
         return False
     url = extract_url(ctx.text.split(":", 1)[1] if ":" in ctx.text else "")
     if not url:

@@ -27,7 +27,7 @@ FEATURE_KEY = "wnacg"
 
 
 def handle(ctx):
-    match = re.fullmatch(r"w:(\d{1,12})", ctx.cmd.strip())
+    match = re.fullmatch(r"w:(\d{1,12})", ctx.cmd.strip(), re.IGNORECASE)
     if not match:
         return False
 
