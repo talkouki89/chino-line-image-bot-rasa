@@ -108,10 +108,19 @@ python -m pip install -r requirements.txt
 ### Linux / macOS
 
 ```bash
+git clone https://github.com/talkouki89/chino-line-image-bot-rasa.git
+cd chino-line-image-bot-rasa
 python3.10 -m venv .venv
 source .venv/bin/activate
 python -m pip install -U pip
 python -m pip install -r requirements.txt
+```
+
+`版本檢查` / `版本更新` 會直接呼叫 `git fetch origin main` 與 `git pull --ff-only origin main`。VPS 如果是用壓縮檔上傳而不是 `git clone`，會沒有 `.git`，版本更新就不能自動拉取。若遇到 `dubious ownership` 或 `safe.directory`，在 VPS 專案目錄執行：
+
+```bash
+git config --global --add safe.directory "$(pwd)"
+git remote set-url origin https://github.com/talkouki89/chino-line-image-bot-rasa.git
 ```
 
 ## 設定
