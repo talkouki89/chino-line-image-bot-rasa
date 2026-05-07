@@ -96,8 +96,8 @@ FEATURE_DEFINITIONS = [
     {
         "key": "admin_profile_tools",
         "name": "管理員資料工具",
-        "description": "查詢 userId、標註對象 MID、群組 ID、機器人一覽與 speedtest。",
-        "commands": "版本 / mymid / gid / mid:USER_ID / mid @使用者 / 機器人一覽 / speedtest",
+        "description": "查詢自己的 userId、標註對象 MID、群組 ID、機器人一覽與 speedtest。",
+        "commands": "版本 / mymid / gid / mid @使用者 / 機器人一覽 / speedtest",
     },
     {
         "key": "runtime_tools",

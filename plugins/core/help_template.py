@@ -223,7 +223,6 @@ def help_admin_bubble(flags):
         "機器人一覽：查看好友數、已知群組數與聊天室統計。",
         "版本：查看目前 Bot 版本號。",
         "mymid / gid：查看自己的 userId 或目前聊天室 ID。",
-        "mid:USER_ID：查詢 LINE 官方個人資料。",
         "mid @使用者：查看被標註對象的 MID。",
         "speedtest / 測速：測試目前伺服器網路。",
         "版本檢查 / 版本更新：檢查 GitHub 並更新後重啟。",
