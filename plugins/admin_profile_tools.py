@@ -1,3 +1,4 @@
+import ast
 import re
 import subprocess
 import sys
@@ -38,6 +39,11 @@ def handle(ctx):
             ctx.reply("此功能只有管理員可以使用。")
             return True
         return handle_mid_lookup(ctx)
+    if command_lower.startswith("mid "):
+        if not ctx.is_admin:
+            ctx.reply("此功能只有管理員可以使用。")
+            return True
+        return handle_mid_mentions(ctx)
     return False
 
 
@@ -111,6 +117,18 @@ def handle_mid_lookup(ctx):
         ctx.reply("請輸入 MID，範例：mid:u1234567890")
         return True
     send_profile_template(ctx, match.group(1))
+    return True
+
+
+def handle_mid_mentions(ctx):
+    mids = parse_mention_user_ids(getattr(ctx.msg, "contentMetadata", None))
+    if not mids:
+        ctx.reply("請標註要查詢的人，範例：mid @使用者")
+        return True
+    lines = ["標註對象 MID"]
+    for index, mid in enumerate(mids, start=1):
+        lines.append(f"{index}. {mid}")
+    ctx.reply("\n".join(lines))
     return True
 
 
@@ -208,6 +226,28 @@ def find_speedtest_image(output):
 def cleanup_speedtest_text(output):
     lines = [line.strip() for line in str(output).splitlines() if line.strip()]
     return "\n".join(lines[:8]) or "測速完成。"
+
+
+def parse_mention_user_ids(content_metadata):
+    if not isinstance(content_metadata, dict):
+        return []
+    mids = []
+    mention = content_metadata.get("mention") or {}
+    for item in mention.get("mentionees") or []:
+        user_id = item.get("userId")
+        if user_id:
+            mids.append(user_id)
+    old_format = content_metadata.get("MENTION")
+    if old_format:
+        try:
+            parsed = ast.literal_eval(old_format)
+        except Exception:
+            parsed = {}
+        for item in parsed.get("MENTIONEES", []):
+            user_id = item.get("M")
+            if user_id:
+                mids.append(user_id)
+    return list(dict.fromkeys(mids))
 
 
 def value(obj, *names, default=""):

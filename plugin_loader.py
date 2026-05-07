@@ -25,7 +25,7 @@ DISABLED_COMMANDS = {
     "tiktok_download": {"prefixes": ("tk:", "TK:")},
     "admin_profile_tools": {
         "exact": {"mymid", "myid", "我是誰", "gid", "群組id", "機器人一覽", "botinfo", "bot info", "bot狀態", "bot 狀態", "speedtest", "測速", "版本", "version", "bot版本", "bot 版本", "版本檢查", "檢查更新", "版本更新", "reb", "reb@bot", "reb @bot", "重啟bot", "重啟 bot", "重啟機器人"},
-        "prefixes": ("mid:",),
+        "prefixes": ("mid:", "mid "),
     },
     "runtime_tools": {"exact": {"ren"}},
     "image_draw_template": {
