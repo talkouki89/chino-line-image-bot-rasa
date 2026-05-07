@@ -19,8 +19,6 @@ def handle(ctx):
             f"\nuserId：{ctx.sender or '未提供'}"
             f"\nchatId：{ctx.to or '未提供'}"
             f"\n角色：{role}"
-            "\n\n請把 userId 填到 .env 的 Creator 或 ADMIN_USER_IDS。"
-            "\n舊版 CHRLINE MID 不能直接當 LINE 官方 Messaging API 的 userId 使用。"
         )
         return True
     if command_lower in {item.lower() for item in HELP_COMMANDS}:

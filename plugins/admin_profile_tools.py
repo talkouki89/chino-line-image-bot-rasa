@@ -1,5 +1,4 @@
 import ast
-import re
 import subprocess
 import sys
 import threading
@@ -10,8 +9,6 @@ from chino_rasa.store import bot_chat_counts
 from chino_rasa.version import current_version
 
 FEATURE_KEY = "admin_profile_tools"
-MID_RE = re.compile(r"^mid:([A-Za-z0-9_-]+)$", re.IGNORECASE)
-FALLBACK_IMAGE = "https://scdn.line-apps.com/n/channel_devcenter/img/fx/01_1_cafe.png"
 
 
 def handle(ctx):
@@ -34,11 +31,6 @@ def handle(ctx):
             return True
         threading.Thread(target=run_speedtest, args=(ctx,), daemon=True).start()
         return True
-    if command_lower.startswith("mid:"):
-        if not ctx.is_admin:
-            ctx.reply("此功能只有管理員可以使用。")
-            return True
-        return handle_mid_lookup(ctx)
     if command_lower.startswith("mid "):
         if not ctx.is_admin:
             ctx.reply("此功能只有管理員可以使用。")
@@ -111,15 +103,6 @@ def observed_group_member_total(ctx, counts):
     return (total if found else None), failed
 
 
-def handle_mid_lookup(ctx):
-    match = MID_RE.match(ctx.text.strip())
-    if not match:
-        ctx.reply("請輸入 MID，範例：mid:u1234567890")
-        return True
-    send_profile_template(ctx, match.group(1))
-    return True
-
-
 def handle_mid_mentions(ctx):
     mids = parse_mention_user_ids(getattr(ctx.msg, "contentMetadata", None))
     if not mids:
@@ -130,64 +113,6 @@ def handle_mid_mentions(ctx):
         lines.append(f"{index}. {mid}")
     ctx.reply("\n".join(lines))
     return True
-
-
-def send_profile_template(ctx, mid):
-    try:
-        profile = ctx.cl.getContact(mid)
-        ctx.send_template(ctx.to, build_profile_template(ctx, profile, mid))
-    except Exception as exc:
-        ctx.log_error(exc)
-        ctx.reply("好友資料查詢失敗，請確認 userId 是否正確。")
-
-
-def build_profile_template(ctx, profile, mid):
-    name = value(profile, "displayName", "name", default="未知")
-    status = value(profile, "statusMessage", default="未設定")
-    picture = profile_image_url(profile)
-    cover = profile_cover_url(ctx, mid) or picture
-    return {
-        "type": "flex",
-        "altText": f"{name} 的好友資料",
-        "contents": {
-            "type": "bubble",
-            "hero": {
-                "type": "image",
-                "url": cover or FALLBACK_IMAGE,
-                "size": "full",
-                "aspectRatio": "20:9",
-                "aspectMode": "cover",
-            },
-            "body": {
-                "type": "box",
-                "layout": "vertical",
-                "spacing": "md",
-                "paddingAll": "18px",
-                "contents": [
-                    {"type": "text", "text": name, "weight": "bold", "size": "xl", "wrap": True, "color": "#111827"},
-                    {"type": "text", "text": status or "未設定狀態消息", "size": "sm", "wrap": True, "color": "#6b7280"},
-                    {"type": "separator"},
-                    row("MID", mid),
-                    row("名稱", name),
-                    row("狀態消息", status or "未設定"),
-                    row("頭貼", picture or "無"),
-                    row("封面", cover or "無"),
-                ],
-            },
-        },
-    }
-
-
-def row(label, text):
-    return {
-        "type": "box",
-        "layout": "vertical",
-        "spacing": "xs",
-        "contents": [
-            {"type": "text", "text": label, "size": "xs", "color": "#6b7280"},
-            {"type": "text", "text": str(text), "size": "sm", "wrap": True, "color": "#111827"},
-        ],
-    }
 
 
 def run_speedtest(ctx):
@@ -248,36 +173,3 @@ def parse_mention_user_ids(content_metadata):
             if user_id:
                 mids.append(user_id)
     return list(dict.fromkeys(mids))
-
-
-def value(obj, *names, default=""):
-    for name in names:
-        try:
-            data = getattr(obj, name)
-        except Exception:
-            data = None
-        if data:
-            return data
-    return default
-
-
-def profile_image_url(contact):
-    thumbnail = value(contact, "thumbnailUrl", default="")
-    if thumbnail:
-        return str(thumbnail).replace("http://", "https://")
-    picture_status = value(contact, "pictureStatus", default="")
-    if picture_status:
-        return f"https://dl.profile.line-cdn.net/{picture_status}"
-    return FALLBACK_IMAGE
-
-
-def profile_cover_url(ctx, mid):
-    try:
-        data = ctx.cl.getProfileCoverObjIdAndUrl(mid)
-        if isinstance(data, (list, tuple)) and data:
-            url = data[0]
-            if url:
-                return str(url).replace("http://", "https://")
-    except Exception:
-        return ""
-    return ""
