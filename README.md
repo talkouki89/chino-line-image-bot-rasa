@@ -4,7 +4,7 @@
 
 這是一個使用 Python / RasaHQ/rasa / LINE Messaging API 的 LINE 官方帳號機器人專案。功能方向來自 [talkouki89/chino-line-image-bot](https://github.com/talkouki89/chino-line-image-bot)，但入口改成 Rasa custom channel，方便和 Python API、插件與後端服務銜接。
 
-目前專案仍在搬運與調整階段，已先做成 private repo 方便測試效果。
+目前版本：`0.1.1-rasa`
 
 ## 主要功能
 
@@ -15,7 +15,7 @@
 - 抽圖：Lolicon API 隨機抽圖、R18 抽圖、標籤抽圖，模板按鈕改用 postback。
 - 下載：YouTube/yt-dlp、Facebook、Instagram、TikTok、X/Twitter、Pornhub。
 - 作品解析：nHentai、紳士漫畫、禁漫天堂、Pixiv。
-- 群組工具：歡迎訊息、群組專用發話名稱與頭像、標註查詢。
+- 群組工具：歡迎訊息、群組專用發話名稱與頭像。
 - 圖片上傳：Freeimage.host API。
 - 管理工具：功能開關 Flex 模板、postback 切換、版本/狀態模板。
 
@@ -43,7 +43,7 @@
 ├─ pic/                             # README / GitHub 顯示圖片
 │  └─ github.png                    # README 預覽圖
 ├─ plugins/                         # 所有可熱加載插件
-│  ├─ admin_profile_tools.py        # 管理員 MID、聯絡人、群組 ID、機器人一覽、speedtest 工具
+│  ├─ admin_profile_tools.py        # 管理員 userId 查詢、群組 ID、機器人一覽、speedtest 工具
 │  ├─ example.py                    # ping/pong 範例插件
 │  ├─ facebook_download.py          # fb: Facebook 影片下載
 │  ├─ freeimage_upload.py           # #圖片上傳，回覆圖片後上傳 Freeimage.host
@@ -572,8 +572,9 @@ p:123456
 
 #圖片上傳
 ren
+版本
 mymid / gid / 機器人一覽 / speedtest
-mid:USER_ID / Contact @使用者
+mid:USER_ID
 版本檢查 / 版本更新
 reb @bot
 ping

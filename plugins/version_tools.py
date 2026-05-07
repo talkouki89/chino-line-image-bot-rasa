@@ -4,10 +4,10 @@ import subprocess
 from pathlib import Path
 
 from chino_rasa.restart import repo_root, schedule_restart
+from chino_rasa.version import VERSION_FILE, current_version
 from plugins.core.help_template import build_version_check_flex
 
 
-VERSION_FILE = repo_root() / "VERSION"
 REMOTE_NAME = "origin"
 REMOTE_BRANCH = "main"
 
@@ -24,6 +24,9 @@ class GitCommandError(RuntimeError):
 def handle(ctx):
     command = ctx.cmd.strip()
     command_lower = command.lower()
+    if command_lower in {"版本", "version", "bot版本", "bot 版本"}:
+        ctx.reply(f"目前版本：{current_version()}")
+        return True
     if command_lower not in {"版本檢查", "檢查更新", "版本更新"}:
         return False
     if not (getattr(ctx, "is_admin", False) or getattr(ctx, "is_creator", False)):
@@ -35,7 +38,7 @@ def handle(ctx):
 
 
 def handle_check(ctx):
-    local_version = read_version(VERSION_FILE)
+    local_version = current_version()
     try:
         ensure_git_repo()
         git("fetch", REMOTE_NAME, REMOTE_BRANCH)
