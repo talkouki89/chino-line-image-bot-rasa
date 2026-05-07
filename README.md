@@ -575,6 +575,7 @@ ren
 版本
 mymid / gid / 機器人一覽 / speedtest
 mid:USER_ID
+mid @使用者
 版本檢查 / 版本更新
 reb @bot
 ping
