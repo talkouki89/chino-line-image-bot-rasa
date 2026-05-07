@@ -1,5 +1,6 @@
 from urllib.parse import urlencode
 
+from chino_rasa.version import current_version
 from plugins.core.features import FEATURE_DEFINITIONS, FEATURE_INDEX, is_enabled
 
 
@@ -162,6 +163,7 @@ def build_picsearch_api_version_check_flex(local_version, remote_version=None, e
 def help_public_bubble():
     return simple_bubble([
         "一般用戶功能",
+        f"目前版本：{current_version()}",
         "輸入圖搜說明可打開此模板。",
         "回覆圖片後可使用圖搜、模板搜與快捷 #1/#2/#3。",
         "可使用下載、作品解析、抽圖、圖片上傳與運行時間功能。",
@@ -219,8 +221,9 @@ def help_admin_bubble(flags):
         "功能設定：打開 postback 開關模板。",
         "功能切換 <key>：文字切換指定功能。",
         "機器人一覽：查看好友數、已知群組數與聊天室統計。",
+        "版本：查看目前 Bot 版本號。",
         "mymid / gid：查看自己的 userId 或目前聊天室 ID。",
-        "mid:USER_ID / Contact @使用者：查詢 LINE 官方個人資料。",
+        "mid:USER_ID：查詢 LINE 官方個人資料。",
         "speedtest / 測速：測試目前伺服器網路。",
         "版本檢查 / 版本更新：檢查 GitHub 並更新後重啟。",
         "reb @bot：重啟目前 Bot 服務。",

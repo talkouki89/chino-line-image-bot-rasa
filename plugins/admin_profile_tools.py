@@ -1,4 +1,3 @@
-import ast
 import re
 import subprocess
 import sys
@@ -7,6 +6,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from chino_rasa.store import bot_chat_counts
+from chino_rasa.version import current_version
 
 FEATURE_KEY = "admin_profile_tools"
 MID_RE = re.compile(r"^mid:([A-Za-z0-9_-]+)$", re.IGNORECASE)
@@ -38,11 +38,6 @@ def handle(ctx):
             ctx.reply("此功能只有管理員可以使用。")
             return True
         return handle_mid_lookup(ctx)
-    if command_lower.startswith("contact "):
-        if not ctx.is_admin:
-            ctx.reply("此功能只有管理員可以使用。")
-            return True
-        return handle_contact_mention(ctx)
     return False
 
 
@@ -51,6 +46,7 @@ def handle_bot_overview(ctx):
     follower_date = insight_date()
     lines = [
         "機器人一覽",
+        f"目前版本：{current_version()}",
         f"好友數量：{followers_text(ctx, follower_date)}",
         f"群組數量：{counts['groups']} 個",
         f"多人聊天室數量：{counts['rooms']} 個",
@@ -114,32 +110,23 @@ def handle_mid_lookup(ctx):
     if not match:
         ctx.reply("請輸入 MID，範例：mid:u1234567890")
         return True
-    send_contact_template(ctx, match.group(1))
+    send_profile_template(ctx, match.group(1))
     return True
 
 
-def handle_contact_mention(ctx):
-    mids = parse_mentions(getattr(ctx.msg, "contentMetadata", None))
-    if not mids:
-        ctx.reply("請標註要查詢的人，範例：Contact @使用者")
-        return True
-    send_contact_template(ctx, mids[0])
-    return True
-
-
-def send_contact_template(ctx, mid):
+def send_profile_template(ctx, mid):
     try:
-        contact = ctx.cl.getContact(mid)
-        ctx.send_template(ctx.to, build_contact_template(ctx, contact, mid))
+        profile = ctx.cl.getContact(mid)
+        ctx.send_template(ctx.to, build_profile_template(ctx, profile, mid))
     except Exception as exc:
         ctx.log_error(exc)
-        ctx.reply("好友資料查詢失敗，請確認 MID 或標註對象是否正確。")
+        ctx.reply("好友資料查詢失敗，請確認 userId 是否正確。")
 
 
-def build_contact_template(ctx, contact, mid):
-    name = value(contact, "displayName", "name", default="未知")
-    status = value(contact, "statusMessage", default="未設定")
-    picture = profile_image_url(contact)
+def build_profile_template(ctx, profile, mid):
+    name = value(profile, "displayName", "name", default="未知")
+    status = value(profile, "statusMessage", default="未設定")
+    picture = profile_image_url(profile)
     cover = profile_cover_url(ctx, mid) or picture
     return {
         "type": "flex",
@@ -221,16 +208,6 @@ def find_speedtest_image(output):
 def cleanup_speedtest_text(output):
     lines = [line.strip() for line in str(output).splitlines() if line.strip()]
     return "\n".join(lines[:8]) or "測速完成。"
-
-
-def parse_mentions(content_metadata):
-    if not content_metadata or "MENTION" not in content_metadata:
-        return []
-    try:
-        mention = ast.literal_eval(content_metadata["MENTION"])
-    except Exception:
-        return []
-    return [item.get("M") for item in mention.get("MENTIONEES", []) if item.get("M")]
 
 
 def value(obj, *names, default=""):
