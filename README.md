@@ -4,7 +4,7 @@
 
 這是一個使用 Python / RasaHQ/rasa / LINE Messaging API 的 LINE 官方帳號機器人專案。功能方向來自 [talkouki89/chino-line-image-bot](https://github.com/talkouki89/chino-line-image-bot)，但入口改成 Rasa custom channel，方便和 Python API、插件與後端服務銜接。
 
-目前版本：`0.1.2-rasa`
+目前版本：`0.1.3-rasa`
 
 ## 主要功能
 
