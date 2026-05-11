@@ -122,9 +122,29 @@ def check_lolicon_cooldown(ctx):
         return True
     allowed, remaining = check_draw_cooldown(ctx.sender)
     if not allowed:
-        ctx.reply(f"抽圖冷卻中，請 {remaining} 秒後再試。")
+        name = cooldown_display_name(ctx)
+        ctx.reply(f"{name} 抽圖冷卻中，請 {remaining} 秒後再試。")
         return False
     return True
+
+
+def cooldown_display_name(ctx):
+    sender = getattr(ctx, "sender", "") or ""
+    if not sender:
+        return "使用者"
+    source = (getattr(ctx, "event", {}) or {}).get("source") or {}
+    try:
+        if source.get("groupId"):
+            profile = ctx.cl.get_group_member_profile(source["groupId"], sender)
+            return profile.displayName or sender
+        if source.get("roomId"):
+            profile = ctx.cl.get_room_member_profile(source["roomId"], sender)
+            return profile.displayName or sender
+        profile = ctx.cl.getContact(sender)
+        return profile.displayName or sender
+    except Exception as exc:
+        ctx.log_error(exc)
+        return sender
 
 
 def handle_random_lolicon(ctx, r18=0, exclude_ai=False):
